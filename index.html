@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOMIWASH - Experiencia Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+
+        :root {
+            --primary: #2563eb;
+            --bg: #09090b;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: #ffffff;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(24, 24, 27, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .points-grid-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1.25rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .active-dot {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            box-shadow: 0 0 25px rgba(37, 99, 235, 0.5);
+            transform: scale(1.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hidden-section { display: none !important; }
+
+        .nav-item-active {
+            color: var(--primary);
+        }
+
+        .nav-item-active::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        input, select {
+            background: #141416 !important;
+            border: 1px solid #27272a !important;
+            color: white !important;
+        }
+
+        @keyframes pulse-custom {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate-pulse-slow { animation: pulse-custom 3s infinite; }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen relative pb-28">
+
+    <!-- Pantalla de Carga -->
+    <div id="loading-screen" class="fixed inset-0 z-[100] bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
+        <div class="relative w-24 h-24 mb-8">
+            <div class="absolute inset-0 border-[3px] border-blue-600/10 rounded-full"></div>
+            <div class="absolute inset-0 border-[3px] border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <h1 class="text-3xl font-extrabold italic tracking-tighter animate-pulse-slow">TOMI<span class="text-blue-500">WASH</span></h1>
+        <p id="loading-status" class="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-4">Iniciando sistema...</p>
+        <button id="retry-btn" onclick="bypassLoading()" class="hidden-section mt-8 px-6 py-2 bg-zinc-900 border border-zinc-800 rounded-full text-xs font-bold uppercase">Entrar en modo Demo</button>
+    </div>
+
+    <!-- Registro -->
+    <div id="view-register" class="hidden-section px-8 py-20">
+        <div class="text-center mb-12">
+            <div class="w-16 h-16 bg-blue-600/10 text-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-6 text-2xl">👤</div>
+            <h1 class="text-4xl font-extrabold italic tracking-tighter mb-3 uppercase">Bienvenido</h1>
+            <p class="text-zinc-500 text-sm leading-relaxed">Únete a nuestra comunidad para gestionar tus turnos y obtener lavados gratis.</p>
+        </div>
+        <div class="space-y-5">
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Nombre Completo</label>
+                <input type="text" id="reg-name" placeholder="Ej. Carlos Tevez" class="w-full p-5 rounded-[1.5rem] focus:ring-2 ring-blue-600/20 outline-none transition-all">
+            </div>
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Tu Vehículo</label>
+                <input type="text" id="reg-vehicle" placeholder="Ej. Vento Blanco" class="w-full p-5 rounded-[1.5rem] focus:ring-2 ring-blue-600/20 outline-none transition-all">
+            </div>
+            <button onclick="handleRegister()" class="w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-[1.5rem] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-900/20 mt-4 active:scale-95">
+                Empezar Experiencia
+            </button>
+        </div>
+    </div>
+
+    <!-- App Principal -->
+    <div id="app-main" class="hidden-section">
+        
+        <header class="p-8 flex justify-between items-center">
+            <div>
+                <p class="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mb-1">Elite Service</p>
+                <h1 class="text-2xl font-black italic tracking-tighter">TOMI<span class="text-blue-500">WASH</span></h1>
+            </div>
+            <div class="bg-zinc-900/50 border border-zinc-800 px-4 py-2 rounded-2xl flex items-center gap-2">
+                <span class="text-base">⭐</span>
+                <span id="user-points-text" class="text-sm font-bold tracking-tighter">0/10</span>
+            </div>
+        </header>
+
+        <main class="px-6 space-y-8">
+            
+            <!-- Vista Inicio -->
+            <section id="view-home" class="space-y-8">
+                <div class="bg-gradient-to-br from-zinc-900 via-zinc-900 to-black p-7 rounded-[3rem] border border-zinc-800/50 shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-600/10 blur-[50px] rounded-full"></div>
+                    
+                    <div class="flex justify-between items-start mb-8 relative z-10">
+                        <div>
+                            <h2 id="display-user-name" class="text-2xl font-black tracking-tight mb-1">¡Hola!</h2>
+                            <p class="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Estado de Fidelidad</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2.5 rounded-2xl">✨</div>
+                    </div>
+                    
+                    <div id="loyalty-grid" class="grid grid-cols-5 gap-3.5 mb-8 relative z-10">
+                        <!-- JS -->
+                    </div>
+
+                    <div class="bg-white/[0.03] border border-white/5 rounded-[1.5rem] p-4 text-center">
+                        <p id="reward-status" class="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Cargando beneficios...</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="changeTab('book')" class="bg-zinc-900/40 p-6 rounded-[2.5rem] border border-zinc-800/50 flex flex-col items-center gap-3 active:scale-95 transition-all hover:bg-zinc-900">
+                        <div class="bg-blue-600/10 text-blue-500 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner">📅</div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Nuevo Turno</span>
+                    </button>
+                    <button onclick="changeTab('history')" class="bg-zinc-900/40 p-6 rounded-[2.5rem] border border-zinc-800/50 flex flex-col items-center gap-3 active:scale-95 transition-all hover:bg-zinc-900">
+                        <div class="bg-zinc-800 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner">🕒</div>
+                        <span class="text-[10px] font-black uppercase tracking-widest">Mis Turnos</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Vista Reservar -->
+            <section id="view-book" class="hidden-section space-y-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <button onclick="changeTab('home')" class="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center text-sm">←</button>
+                    <h2 class="text-xl font-black uppercase italic tracking-tighter">Reservar Servicio</h2>
+                </div>
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-zinc-500 uppercase ml-2 tracking-widest">Tipo de Lavado</label>
+                        <select id="input-service" class="w-full p-5 rounded-[1.5rem] appearance-none font-bold">
+                            <option value="Lavado Express">Lavado Express — $5.000</option>
+                            <option value="Lavado Premium">Lavado Premium — $8.500</option>
+                            <option value="Lavado Completo + Motor">Completo + Motor — $12.000</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-zinc-500 uppercase ml-2 tracking-widest">Fecha</label>
+                            <input type="date" id="input-date" class="w-full p-5 rounded-[1.5rem] text-xs font-bold">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-zinc-500 uppercase ml-2 tracking-widest">Horario</label>
+                            <select id="input-time" class="w-full p-5 rounded-[1.5rem] text-xs font-bold">
+                                <option>09:00 HS</option>
+                                <option>11:00 HS</option>
+                                <option>14:00 HS</option>
+                                <option>16:00 HS</option>
+                                <option>18:00 HS</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="confirmAppointment()" class="w-full bg-white text-black py-5 rounded-[1.5rem] font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl">
+                        Agendar ahora
+                    </button>
+                </div>
+            </section>
+
+            <!-- Vista Mis Turnos -->
+            <section id="view-history" class="hidden-section space-y-6">
+                <div class="flex items-center gap-4">
+                    <button onclick="changeTab('home')" class="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center text-sm">←</button>
+                    <h2 class="text-xl font-black uppercase italic tracking-tighter">Mis Reservas</h2>
+                </div>
+                <div id="user-appointments-list" class="space-y-4"></div>
+            </section>
+
+            <!-- Vista Admin -->
+            <section id="view-admin" class="hidden-section space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-black uppercase italic tracking-tighter text-blue-500">Panel Central</h2>
+                    <button onclick="changeTab('home')" class="text-[10px] font-black text-zinc-600 underline uppercase tracking-widest">Cerrar</button>
+                </div>
+                <div id="admin-appointments-list" class="space-y-4"></div>
+            </section>
+        </main>
+
+        <nav class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[85%] max-w-xs glass-card rounded-[2.5rem] p-2 flex justify-around items-center z-50 shadow-2xl">
+            <button onclick="changeTab('home')" id="nav-home" class="p-4 rounded-full nav-item-active transition-all">🏠</button>
+            <button onclick="changeTab('book')" id="nav-book" class="p-4 rounded-full text-zinc-600 transition-all">📅</button>
+            <button onclick="changeTab('history')" id="nav-history" class="p-4 rounded-full text-zinc-600 transition-all">🕒</button>
+            <button onclick="tryAdminAccess()" id="nav-admin" class="p-4 rounded-full text-zinc-600 transition-all">🛡️</button>
+        </nav>
+    </div>
+
+    <script>
+        const PIN_ADMIN = "2024";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tomiwash-standalone';
+        
+        let db, auth, currentUser = null, userProfile = null, isAdminMode = false;
+
+        // Fallback for standalone use
+        const initializeFirebase = () => {
+            try {
+                const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+                    apiKey: "dummy-key",
+                    authDomain: "tomiwash.firebaseapp.com",
+                    projectId: "tomiwash",
+                    storageBucket: "tomiwash.appspot.com",
+                    messagingSenderId: "123",
+                    appId: "123"
+                };
+                
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(config);
+                }
+                db = firebase.firestore();
+                auth = firebase.auth();
+                return true;
+            } catch (e) {
+                console.warn("Firebase Init Error:", e);
+                return false;
+            }
+        };
+
+        window.onload = async () => {
+            const hasFirebase = initializeFirebase();
+            
+            const timeout = setTimeout(() => {
+                document.getElementById('loading-status').innerText = "Abriendo modo local...";
+                document.getElementById('retry-btn').classList.remove('hidden-section');
+            }, 3000);
+
+            if (hasFirebase && typeof __firebase_config !== 'undefined') {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await auth.signInWithCustomToken(__initial_auth_token);
+                    } else {
+                        await auth.signInAnonymously();
+                    }
+
+                    auth.onAuthStateChanged(user => {
+                        if (user) {
+                            clearTimeout(timeout);
+                            currentUser = user;
+                            checkUserProfile();
+                        }
+                    });
+                } catch (e) {
+                    console.error("Auth Error:", e);
+                }
+            }
+        };
+
+        // Permite usar la app aunque no haya Firebase conectado (Modo Offline/Local)
+        function bypassLoading() {
+            currentUser = { uid: 'local-user-' + Math.random().toString(36).substr(2, 9) };
+            userProfile = { name: "Usuario Local", vehicle: "Vehículo Test" };
+            document.getElementById('loading-screen').classList.add('hidden-section');
+            document.getElementById('app-main').classList.remove('hidden-section');
+            renderLoyaltyGrid(0);
+            renderAppointments([]);
+        }
+
+        async function checkUserProfile() {
+            try {
+                const doc = await db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid).collection('profile').doc('data').get();
+                if (doc.exists) {
+                    userProfile = doc.data();
+                    loadAppData();
+                } else {
+                    document.getElementById('loading-screen').classList.add('hidden-section');
+                    document.getElementById('view-register').classList.remove('hidden-section');
+                }
+            } catch (e) {
+                bypassLoading();
+            }
+        }
+
+        function loadAppData() {
+            document.getElementById('display-user-name').innerText = `¡Hola, ${userProfile.name.split(' ')[0]}!`;
+            
+            db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid).collection('profile').doc('stats').onSnapshot(doc => {
+                const pts = doc.exists ? (doc.data().points || 0) : 0;
+                renderLoyaltyGrid(pts);
+            }, () => renderLoyaltyGrid(0));
+
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('appointments').onSnapshot(snap => {
+                const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderAppointments(all);
+            }, () => renderAppointments([]));
+
+            document.getElementById('loading-screen').classList.add('hidden-section');
+            document.getElementById('app-main').classList.remove('hidden-section');
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('reg-name').value;
+            const vehicle = document.getElementById('reg-vehicle').value;
+            if (!name || !vehicle) return;
+
+            userProfile = { name, vehicle, date: new Date().toISOString() };
+            
+            try {
+                await db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid).collection('profile').doc('data').set(userProfile);
+                await db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid).collection('profile').doc('stats').set({ points: 0 });
+                loadAppData();
+            } catch (e) {
+                // Fallback local si falla la base de datos
+                document.getElementById('view-register').classList.add('hidden-section');
+                document.getElementById('app-main').classList.remove('hidden-section');
+                renderLoyaltyGrid(0);
+            }
+            document.getElementById('view-register').classList.add('hidden-section');
+        }
+
+        async function confirmAppointment() {
+            const service = document.getElementById('input-service').value;
+            const date = document.getElementById('input-date').value;
+            const time = document.getElementById('input-time').value;
+
+            if (!date) return;
+
+            const appt = {
+                userId: currentUser.uid,
+                userName: userProfile.name,
+                vehicle: userProfile.vehicle,
+                service, date, time,
+                timestamp: Date.now()
+            };
+
+            try {
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('appointments').add(appt);
+            } catch (e) {
+                console.log("Guardado local (Base de datos no disponible)");
+            }
+
+            alert("¡Turno confirmado!");
+            changeTab('home');
+        }
+
+        async function processPayment(uid, aid) {
+            try {
+                const statsRef = db.collection('artifacts').doc(appId).collection('users').doc(uid).collection('profile').doc('stats');
+                const d = await statsRef.get();
+                const current = d.exists ? d.data().points : 0;
+                await statsRef.set({ points: (current + 1) % 11 });
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('appointments').doc(aid).delete();
+            } catch (e) { alert("Error al procesar pago"); }
+        }
+
+        async function cancelAppt(id) {
+            if(confirm("¿Cancelar turno?")) {
+                try {
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('appointments').doc(id).delete();
+                } catch (e) { console.log("Error al cancelar"); }
+            }
+        }
+
+        function renderLoyaltyGrid(pts) {
+            const grid = document.getElementById('loyalty-grid');
+            const status = document.getElementById('reward-status');
+            document.getElementById('user-points-text').innerText = `${pts}/10`;
+            grid.innerHTML = '';
+            for (let i = 1; i <= 10; i++) {
+                grid.innerHTML += `<div class="points-grid-item ${i <= pts ? 'active-dot' : 'bg-white/5 border border-white/5'}">
+                    ${i <= pts ? '⭐' : `<span class="text-[10px] font-black text-zinc-700">${i}</span>`}
+                </div>`;
+            }
+            status.innerText = pts >= 10 ? "¡PRÓXIMO LAVADO GRATIS!" : `TE FALTAN ${10 - pts} LAVADOS`;
+            if(pts >= 10) {
+                status.classList.remove('text-zinc-400');
+                status.classList.add('text-blue-400');
+            }
+        }
+
+        function renderAppointments(list) {
+            const uList = document.getElementById('user-appointments-list');
+            const aList = document.getElementById('admin-appointments-list');
+            
+            const my = list.filter(a => a.userId === currentUser.uid);
+            uList.innerHTML = my.length ? '' : '<p class="text-center py-10 text-zinc-600 text-xs font-bold uppercase tracking-widest">Sin turnos agendados</p>';
+            my.forEach(a => {
+                uList.innerHTML += `
+                    <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-[2rem] flex justify-between items-center">
+                        <div>
+                            <p class="text-blue-500 font-black text-[10px] uppercase mb-1">${a.service}</p>
+                            <p class="text-lg font-black italic tracking-tighter">${a.date} · ${a.time}</p>
+                        </div>
+                        <button onclick="cancelAppt('${a.id}')" class="bg-zinc-800 p-3 rounded-2xl text-xs">✕</button>
+                    </div>`;
+            });
+
+            aList.innerHTML = list.length ? '' : '<p class="text-center py-10 text-zinc-600 text-xs font-bold uppercase tracking-widest">No hay turnos hoy</p>';
+            list.forEach(a => {
+                aList.innerHTML += `
+                    <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-[2rem] space-y-4">
+                        <div class="flex justify-between">
+                            <div>
+                                <p class="text-xs font-black text-blue-500 uppercase mb-1">${a.userName}</p>
+                                <p class="text-sm font-bold text-zinc-400">${a.vehicle}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-black">${a.date}</p>
+                                <p class="text-[10px] text-zinc-500">${a.time}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="processPayment('${a.userId}', '${a.id}')" class="flex-1 bg-blue-600 py-3 rounded-xl text-[10px] font-black uppercase">Finalizar y Sumar Pto</button>
+                            <button onclick="cancelAppt('${a.id}')" class="bg-zinc-800 px-4 rounded-xl text-red-500 text-sm">✕</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function changeTab(t) {
+            if (t === 'admin' && !isAdminMode) return;
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden-section'));
+            document.getElementById(`view-${t}`).classList.remove('hidden-section');
+            document.querySelectorAll('nav button').forEach(b => {
+                b.classList.remove('nav-item-active', 'text-white');
+                b.classList.add('text-zinc-600');
+            });
+            const active = document.getElementById(`nav-${t}`);
+            if(active) active.classList.add('nav-item-active', 'text-white');
+        }
+
+        function tryAdminAccess() {
+            const p = prompt("PIN ADMIN:");
+            if (p === PIN_ADMIN) { isAdminMode = true; changeTab('admin'); }
+        }
+    </script>
+</body>
+</html>
