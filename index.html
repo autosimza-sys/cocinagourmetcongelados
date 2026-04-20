@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cocina Gourmet - Prueba simple</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -66,8 +65,8 @@
     <h2>1. Conexión</h2>
     <input id="supabaseUrl" placeholder="Project URL" value="https://peoimydvofprzemjvyzg.supabase.co" />
     <input id="supabaseKey" placeholder="Clave publicable (sb_publishable...)" />
-    <button class="secondary" onclick="guardarConexion()">Guardar conexión</button>
-    <button onclick="conectar()">Conectar</button>
+    <button class="secondary" id="btnGuardarConexion">Guardar conexión</button>
+    <button id="btnConectar">Conectar</button>
     <p id="estadoConexion" class="muted">Sin conectar.</p>
   </div>
 
@@ -75,41 +74,42 @@
     <h2>2. Agregar producto</h2>
     <input id="name" placeholder="Nombre del producto" />
     <input id="price" type="number" placeholder="Precio" />
-    <button onclick="agregarProducto()">Guardar producto</button>
+    <button id="btnGuardarProducto">Guardar producto</button>
     <p id="estadoGuardado" class="muted"></p>
   </div>
 
   <div class="card">
     <h2>3. Productos guardados</h2>
-    <button onclick="cargarProductos()">Actualizar lista</button>
+    <button id="btnActualizarLista">Actualizar lista</button>
     <div id="lista"></div>
   </div>
 
   <script>
-    let supabase = null;
+    function getConfig() {
+      return {
+        url: document.getElementById('supabaseUrl').value.trim(),
+        key: document.getElementById('supabaseKey').value.trim()
+      };
+    }
 
     function guardarConexion() {
-      const url = document.getElementById('supabaseUrl').value.trim();
-      const key = document.getElementById('supabaseKey').value.trim();
-
+      const { url, key } = getConfig();
       localStorage.setItem('cg_supabase_url', url);
       localStorage.setItem('cg_supabase_key', key);
-
-      document.getElementById('estadoConexion').innerHTML = '<span class="ok">Datos guardados en este navegador.</span>';
+      document.getElementById('estadoConexion').innerHTML =
+        '<span class="ok">Datos guardados en este navegador.</span>';
     }
 
     function cargarConexionGuardada() {
       const url = localStorage.getItem('cg_supabase_url') || '';
       const key = localStorage.getItem('cg_supabase_key') || '';
-
       if (url) document.getElementById('supabaseUrl').value = url;
       if (key) document.getElementById('supabaseKey').value = key;
     }
 
     async function conectar() {
-      const url = document.getElementById('supabaseUrl').value.trim();
-      const key = document.getElementById('supabaseKey').value.trim();
       const estado = document.getElementById('estadoConexion');
+      const { url, key } = getConfig();
 
       try {
         if (!url || !key) {
@@ -117,14 +117,20 @@
           return;
         }
 
-        supabase = window.supabase.createClient(url, key);
+        const res = await fetch(url + '/rest/v1/products?select=id&limit=1', {
+          method: 'GET',
+          headers: {
+            'apikey': key,
+            'Authorization': 'Bearer ' + key,
+            'Content-Type': 'application/json'
+          }
+        });
 
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .limit(1);
+        const text = await res.text();
 
-        if (error) throw error;
+        if (!res.ok) {
+          throw new Error(text || 'No se pudo conectar');
+        }
 
         estado.innerHTML = '<span class="ok">Conexión exitosa.</span>';
         await cargarProductos();
@@ -135,31 +141,42 @@
 
     async function agregarProducto() {
       const estado = document.getElementById('estadoGuardado');
+      const { url, key } = getConfig();
 
       try {
-        if (!supabase) {
-          estado.innerHTML = '<span class="err">Primero conectate.</span>';
-          return;
-        }
-
         const name = document.getElementById('name').value.trim();
         const price = Number(document.getElementById('price').value);
+
+        if (!url || !key) {
+          estado.innerHTML = '<span class="err">Primero cargá la conexión.</span>';
+          return;
+        }
 
         if (!name || !price) {
           estado.innerHTML = '<span class="err">Completá nombre y precio.</span>';
           return;
         }
 
-        const { error } = await supabase
-          .from('products')
-          .insert([{ name, price }]);
+        const res = await fetch(url + '/rest/v1/products', {
+          method: 'POST',
+          headers: {
+            'apikey': key,
+            'Authorization': 'Bearer ' + key,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify([{ name, price }])
+        });
 
-        if (error) throw error;
+        const text = await res.text();
+
+        if (!res.ok) {
+          throw new Error(text || 'No se pudo guardar');
+        }
 
         document.getElementById('name').value = '';
         document.getElementById('price').value = '';
         estado.innerHTML = '<span class="ok">Producto guardado.</span>';
-
         await cargarProductos();
       } catch (e) {
         estado.innerHTML = '<span class="err">No se pudo guardar: ' + e.message + '</span>';
@@ -168,37 +185,53 @@
 
     async function cargarProductos() {
       const lista = document.getElementById('lista');
+      const { url, key } = getConfig();
 
       try {
-        if (!supabase) {
-          lista.innerHTML = '<p class="muted">Primero conectate.</p>';
+        if (!url || !key) {
+          lista.innerHTML = '<p class="muted">Primero cargá la conexión.</p>';
           return;
         }
 
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('id', { ascending: false });
+        const res = await fetch(url + '/rest/v1/products?select=*&order=id.desc', {
+          method: 'GET',
+          headers: {
+            'apikey': key,
+            'Authorization': 'Bearer ' + key,
+            'Content-Type': 'application/json'
+          }
+        });
 
-        if (error) throw error;
+        const text = await res.text();
+
+        if (!res.ok) {
+          throw new Error(text || 'No se pudo cargar');
+        }
+
+        const data = JSON.parse(text);
 
         if (!data || data.length === 0) {
           lista.innerHTML = '<p class="muted">Todavía no hay productos.</p>';
           return;
         }
 
-        lista.innerHTML = data.map(p => `
-          <div class="item">
-            <strong>${p.name}</strong><br>
-            $ ${Number(p.price).toLocaleString('es-AR')}
-          </div>
-        `).join('');
+        lista.innerHTML = data.map(function(p) {
+          return '<div class="item"><strong>' + p.name + '</strong><br>$ ' +
+            Number(p.price).toLocaleString('es-AR') + '</div>';
+        }).join('');
       } catch (e) {
         lista.innerHTML = '<p class="err">Error al cargar: ' + e.message + '</p>';
       }
     }
 
-    cargarConexionGuardada();
+    document.addEventListener('DOMContentLoaded', function() {
+      cargarConexionGuardada();
+
+      document.getElementById('btnGuardarConexion').addEventListener('click', guardarConexion);
+      document.getElementById('btnConectar').addEventListener('click', conectar);
+      document.getElementById('btnGuardarProducto').addEventListener('click', agregarProducto);
+      document.getElementById('btnActualizarLista').addEventListener('click', cargarProductos);
+    });
   </script>
 </body>
 </html>
