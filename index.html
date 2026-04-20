@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cocina Gourmet | Pedidos</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --muted: #1f2937;
+      --soft: #334155;
+      --line: #263244;
+      --text: #f8fafc;
+      --sub: #cbd5e1;
+      --brand: #22c55e;
+      --brand-2: #16a34a;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --radius: 18px;
+      --shadow: 0 10px 30px rgba(0,0,0,.22);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: Inter, system-ui, Arial, sans-serif; background: linear-gradient(180deg, #0b1220 0%, #0f172a 100%); color: var(--text); }
+    a { color: inherit; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 20px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 16px 20px; background: rgba(17,24,39,.82); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,.06); border-radius: 22px; position: sticky; top: 12px; z-index: 20; box-shadow: var(--shadow);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); display: grid; place-items: center; font-weight: 800; color: #08110d; }
+    .brand h1 { margin: 0; font-size: 1.2rem; }
+    .brand p { margin: 0; color: var(--sub); font-size: .9rem; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    button, input, select, textarea {
+      font: inherit;
+    }
+    .btn {
+      border: 0; border-radius: 14px; padding: 12px 16px; cursor: pointer; font-weight: 700;
+      background: var(--brand); color: #06250f;
+    }
+    .btn.secondary { background: #1f2937; color: var(--text); border: 1px solid rgba(255,255,255,.08); }
+    .btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,.12); color: var(--text); }
+    .btn.warn { background: var(--warn); color: #2a1600; }
+    .btn.danger { background: var(--danger); color: white; }
+    .hero {
+      display: grid; grid-template-columns: 1.2fr .8fr; gap: 20px; margin-top: 20px;
+    }
+    .card {
+      background: rgba(17,24,39,.88); border: 1px solid rgba(255,255,255,.06); border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .hero-card { padding: 24px; }
+    .hero h2 { margin: 0 0 10px; font-size: 2rem; }
+    .hero p { margin: 0; color: var(--sub); line-height: 1.5; }
+    .grid-main { display: grid; grid-template-columns: 1fr 360px; gap: 20px; margin-top: 20px; }
+    .controls { display: grid; grid-template-columns: 1fr 180px 160px; gap: 12px; margin-bottom: 16px; }
+    .field, .select, .textarea {
+      width: 100%; background: #0b1220; color: var(--text); border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px; padding: 12px 14px; outline: none;
+    }
+    .catalog-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .product { overflow: hidden; display: flex; flex-direction: column; }
+    .product img { width: 100%; height: 210px; object-fit: cover; background: #0b1220; }
+    .product-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .muted { color: var(--sub); }
+    .price { font-weight: 800; font-size: 1.1rem; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .row.between { justify-content: space-between; }
+    .qty { display: flex; align-items: center; gap: 8px; }
+    .qty button { width: 32px; height: 32px; border-radius: 10px; border: 0; cursor: pointer; background: #1f2937; color: white; }
+    .cart { padding: 18px; position: sticky; top: 92px; }
+    .cart h3, .section-title { margin: 0 0 12px; }
+    .cart-items { display: flex; flex-direction: column; gap: 10px; max-height: 240px; overflow: auto; }
+    .cart-item { padding: 12px; border-radius: 14px; background: #0b1220; border: 1px solid rgba(255,255,255,.06); }
+    .summary { padding-top: 14px; margin-top: 14px; border-top: 1px solid rgba(255,255,255,.08); }
+    .admin-panel { margin-top: 20px; display: none; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tab { padding: 10px 14px; border-radius: 999px; cursor: pointer; border: 1px solid rgba(255,255,255,.1); background: transparent; color: var(--text); }
+    .tab.active { background: var(--brand); color: #06250f; border-color: transparent; }
+    .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .panel-pad { padding: 18px; }
+    .list { display: flex; flex-direction: column; gap: 10px; }
+    .list-item { padding: 12px; border-radius: 14px; background: #0b1220; border: 1px solid rgba(255,255,255,.06); }
+    .badge { display: inline-block; padding: 6px 10px; border-radius: 999px; font-size: .8rem; background: rgba(34,197,94,.15); color: #7ef0a6; }
+    .badge.pending { background: rgba(245,158,11,.15); color: #fcd34d; }
+    .badge.done { background: rgba(59,130,246,.15); color: #93c5fd; }
+    .hidden { display: none !important; }
+    .helper { font-size: .9rem; color: var(--sub); }
+    .footer-space { height: 40px; }
+    .alert {
+      position: fixed; right: 20px; bottom: 20px; background: rgba(15,23,42,.97); color: white; padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,.1); border-radius: 14px; display: none; z-index: 200;
+    }
+    @media (max-width: 980px) {
+      .hero, .grid-main, .admin-grid, .controls { grid-template-columns: 1fr; }
+      .catalog-grid { grid-template-columns: 1fr 1fr; }
+      .cart { position: static; }
+    }
+    @media (max-width: 640px) {
+      .catalog-grid { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; align-items: stretch; }
+      .actions { width: 100%; }
+      .actions .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">CG</div>
+        <div>
+          <h1>Cocina Gourmet</h1>
+          <p>Pedidos online por zona + WhatsApp</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" id="btnConfig">Configurar conexión</button>
+        <button class="btn secondary" id="btnAdminToggle">Administrador</button>
+        <button class="btn" id="btnCartTop">Ver carrito</button>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="card hero-card">
+        <h2>Vendé online sin arrancar caro</h2>
+        <p>Esta versión ya usa una base compartida: todos ven el mismo catálogo, los pedidos se guardan online, podés cargar zonas con distintos WhatsApp y dejar lista la base para Mercado Pago y automatización futura.</p>
+      </div>
+      <div class="card hero-card">
+        <div class="row between"><strong>Estado</strong><span class="badge" id="connectionStatus">Sin conectar</span></div>
+        <div style="height:12px"></div>
+        <div class="helper">Primero pegá tu URL y tu anon key de Supabase. Después iniciá sesión como admin para cargar productos, zonas y datos bancarios.</div>
+      </div>
+    </section>
+
+    <section class="grid-main">
+      <div>
+        <div class="card panel-pad">
+          <div class="controls">
+            <input class="field" id="searchInput" placeholder="Buscar producto..." />
+            <select class="select" id="categoryFilter"><option value="">Todas las categorías</option></select>
+            <select class="select" id="zoneSelect"><option value="">Elegí tu zona</option></select>
+          </div>
+          <div class="helper" id="bankInfoBox">Cargá los datos bancarios desde el panel admin para mostrarlos acá.</div>
+        </div>
+
+        <div style="height:16px"></div>
+        <div class="catalog-grid" id="catalogGrid"></div>
+      </div>
+
+      <aside class="card cart" id="cartPanel">
+        <h3>Tu pedido</h3>
+        <div class="cart-items" id="cartItems"></div>
+
+        <div class="summary">
+          <div class="row between"><span>Subtotal</span><strong id="subtotalText">$0</strong></div>
+          <div style="height:12px"></div>
+          <input class="field" id="customerName" placeholder="Nombre y apellido" />
+          <div style="height:10px"></div>
+          <input class="field" id="customerPhone" placeholder="WhatsApp" />
+          <div style="height:10px"></div>
+          <input class="field" id="customerAddress" placeholder="Dirección" />
+          <div style="height:10px"></div>
+          <select class="select" id="paymentMethod">
+            <option value="transferencia">Transferencia</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="mercado_pago">Mercado Pago (futuro)</option>
+          </select>
+          <div style="height:10px"></div>
+          <textarea class="textarea" id="customerNotes" rows="3" placeholder="Observaciones"></textarea>
+          <div style="height:14px"></div>
+          <button class="btn" style="width:100%" id="btnPlaceOrder">Guardar pedido y abrir WhatsApp</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="admin-panel" id="adminPanel">
+      <div class="card panel-pad">
+        <div class="row between">
+          <div>
+            <h3 class="section-title">Panel administrador</h3>
+            <div class="helper">Iniciá sesión con tu usuario admin de Supabase.</div>
+          </div>
+          <div class="row">
+            <span id="adminUserText" class="helper"></span>
+            <button class="btn secondary hidden" id="btnLogout">Cerrar sesión</button>
+          </div>
+        </div>
+
+        <div id="authBox">
+          <div class="admin-grid">
+            <div class="card panel-pad">
+              <h4 style="margin-top:0">Ingresar</h4>
+              <input class="field" id="loginEmail" placeholder="Email" />
+              <div style="height:10px"></div>
+              <input class="field" id="loginPassword" type="password" placeholder="Contraseña" />
+              <div style="height:14px"></div>
+              <button class="btn" id="btnLogin">Ingresar</button>
+            </div>
+            <div class="card panel-pad">
+              <h4 style="margin-top:0">Crear primer usuario</h4>
+              <div class="helper">Podés crear el usuario desde acá, pero para volverlo admin tenés que ejecutar un UPDATE en SQL una sola vez. Está explicado en el instructivo.</div>
+              <div style="height:14px"></div>
+              <input class="field" id="signupEmail" placeholder="Email" />
+              <div style="height:10px"></div>
+              <input class="field" id="signupPassword" type="password" placeholder="Contraseña" />
+              <div style="height:14px"></div>
+              <button class="btn secondary" id="btnSignup">Crear usuario</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="adminContent" class="hidden">
+          <div class="tabs">
+            <button class="tab active" data-tab="products">Productos</button>
+            <button class="tab" data-tab="zones">Zonas</button>
+            <button class="tab" data-tab="bank">Pagos</button>
+            <button class="tab" data-tab="orders">Pedidos</button>
+          </div>
+
+          <div class="tab-pane" id="tab-products">
+            <div class="admin-grid">
+              <div class="card panel-pad">
+                <h4 style="margin-top:0">Nuevo producto</h4>
+                <input class="field" id="productName" placeholder="Nombre" />
+                <div style="height:10px"></div>
+                <select class="select" id="productCategory"></select>
+                <div style="height:10px"></div>
+                <input class="field" id="productPrice" type="number" placeholder="Precio" />
+                <div style="height:10px"></div>
+                <input class="field" id="productStock" type="number" placeholder="Stock opcional" />
+                <div style="height:10px"></div>
+                <textarea class="textarea" id="productDescription" rows="3" placeholder="Descripción"></textarea>
+                <div style="height:10px"></div>
+                <input class="field" id="productImageFile" type="file" accept="image/*" />
+                <div style="height:10px"></div>
+                <input class="field" id="productImageUrl" placeholder="o pegá URL de imagen" />
+                <div style="height:14px"></div>
+                <button class="btn" id="btnSaveProduct">Guardar producto</button>
+                <div style="height:14px"></div>
+                <h4>Categorías</h4>
+                <div class="row">
+                  <input class="field" id="newCategoryName" placeholder="Nueva categoría" />
+                  <button class="btn secondary" id="btnSaveCategory">Agregar</button>
+                </div>
+              </div>
+              <div class="card panel-pad">
+                <h4 style="margin-top:0">Productos cargados</h4>
+                <div class="list" id="adminProductsList"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane hidden" id="tab-zones">
+            <div class="admin-grid">
+              <div class="card panel-pad">
+                <h4 style="margin-top:0">Nueva zona</h4>
+                <input class="field" id="zoneName" placeholder="Zona" />
+                <div style="height:10px"></div>
+                <input class="field" id="zoneWhatsapp" placeholder="WhatsApp, ej 5492611234567" />
+                <div style="height:10px"></div>
+                <input class="field" id="zoneDelivery" type="number" placeholder="Costo de envío opcional" />
+                <div style="height:10px"></div>
+                <input class="field" id="zoneMinOrder" type="number" placeholder="Pedido mínimo opcional" />
+                <div style="height:14px"></div>
+                <button class="btn" id="btnSaveZone">Guardar zona</button>
+              </div>
+              <div class="card panel-pad">
+                <h4 style="margin-top:0">Zonas cargadas</h4>
+                <div class="list" id="zonesList"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane hidden" id="tab-bank">
+            <div class="admin-grid">
+              <div class="card panel-pad">
+                <h4 style="margin-top:0">Datos bancarios</h4>
+                <input class="field" id="bankAlias" placeholder="Alias" />
+                <div style="height:10px"></div>
+                <input class="field" id="bankCbu" placeholder="CBU / CVU" />
+                <div style="height:10px"></div>
+                <input class="field" id="bankHolder" placeholder="Titular" />
+                <div style="height:10px"></div>
+                <input class="field" id="bankName" placeholder="Banco" />
+                <div style="height:10px"></div>
+                <textarea class="textarea" id="bankInstructions" rows="4" placeholder="Instrucciones para pagar"></textarea>
+                <div style="height:14px"></div>
+                <button class="btn" id="btnSaveBank">Guardar datos bancarios</button>
+              </div>
+              <div class="card panel-pad">
+                <h4 style="margin-top:0">Vista pública</h4>
+                <div id="bankPreview" class="helper">Todavía no hay datos cargados.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane hidden" id="tab-orders">
+            <div class="card panel-pad">
+              <h4 style="margin-top:0">Pedidos recibidos</h4>
+              <div class="list" id="ordersList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-space"></div>
+  </div>
+
+  <div class="alert" id="toast"></div>
+
+  <script>
+    const STORAGE_KEYS = {
+      url: 'cg_supabase_url',
+      key: 'cg_supabase_anon_key'
+    };
+
+    let supabase = null;
+    let state = {
+      categories: [],
+      zones: [],
+      products: [],
+      bank: null,
+      orders: [],
+      cart: [],
+      user: null,
+      profile: null,
+      adminReady: false
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function money(n) {
+      return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(n || 0));
+    }
+
+    function toast(msg) {
+      const el = $('toast');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 2800);
+    }
+
+    function promptConnection() {
+      const existingUrl = localStorage.getItem(STORAGE_KEYS.url) || '';
+      const existingKey = localStorage.getItem(STORAGE_KEYS.key) || '';
+      const url = prompt('Pegá tu Supabase Project URL', existingUrl);
+      if (!url) return;
+      const key = prompt('Pegá tu Supabase anon public key', existingKey);
+      if (!key) return;
+      localStorage.setItem(STORAGE_KEYS.url, url.trim());
+      localStorage.setItem(STORAGE_KEYS.key, key.trim());
+      initSupabase();
+    }
+
+    function initSupabase() {
+      const url = localStorage.getItem(STORAGE_KEYS.url);
+      const key = localStorage.getItem(STORAGE_KEYS.key);
+      if (!url || !key) {
+        $('connectionStatus').textContent = 'Sin conectar';
+        return;
+      }
+      try {
+        supabase = window.supabase.createClient(url, key);
+        $('connectionStatus').textContent = 'Conectado';
+        boot();
+      } catch (e) {
+        console.error(e);
+        $('connectionStatus').textContent = 'Error';
+        toast('No pude conectar con Supabase');
+      }
+    }
+
+    async function boot() {
+      await Promise.all([loadPublicData(), restoreSession()]);
+      renderAll();
+    }
+
+    async function restoreSession() {
+      if (!supabase) return;
+      const { data } = await supabase.auth.getSession();
+      state.user = data?.session?.user || null;
+      if (state.user) {
+        await loadProfile();
+      }
+      supabase.auth.onAuthStateChange(async (_event, session) => {
+        state.user = session?.user || null;
+        if (state.user) {
+          await loadProfile();
+        } else {
+          state.profile = null;
+          state.adminReady = false;
+        }
+        renderAdminState();
+      });
+      renderAdminState();
+    }
+
+    async function loadProfile() {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', state.user.id).maybeSingle();
+      if (error) {
+        console.error(error);
+        return;
+      }
+      state.profile = data;
+      state.adminReady = !!data && data.role === 'admin';
+      if (state.adminReady) {
+        await loadAdminOrders();
+      }
+    }
+
+    async function loadPublicData() {
+      if (!supabase) return;
+      const [catRes, zoneRes, prodRes, bankRes] = await Promise.all([
+        supabase.from('categories').select('*').order('name'),
+        supabase.from('zones').select('*').eq('active', true).order('name'),
+        supabase.from('products').select('*, categories(name)').eq('active', true).order('created_at', { ascending: false }),
+        supabase.from('settings').select('*').eq('key', 'bank_info').maybeSingle()
+      ]);
+      if (!catRes.error) state.categories = catRes.data || [];
+      if (!zoneRes.error) state.zones = zoneRes.data || [];
+      if (!prodRes.error) state.products = prodRes.data || [];
+      if (!bankRes.error) state.bank = bankRes.data?.value || null;
+    }
+
+    async function loadAdminOrders() {
+      const { data, error } = await supabase.from('orders').select('*, order_items(*, product:products(name))').order('created_at', { ascending: false }).limit(100);
+      if (!error) state.orders = data || [];
+      renderOrders();
+    }
+
+    function renderAll() {
+      renderCategoryOptions();
+      renderZoneOptions();
+      renderBankInfo();
+      renderProducts();
+      renderCart();
+      renderAdminState();
+      renderAdminProducts();
+      renderZonesAdmin();
+      renderOrders();
+    }
+
+    function renderCategoryOptions() {
+      const filter = $('categoryFilter');
+      const admin = $('productCategory');
+      filter.innerHTML = '<option value="">Todas las categorías</option>';
+      admin.innerHTML = '<option value="">Sin categoría</option>';
+      state.categories.forEach(c => {
+        filter.innerHTML += `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+        admin.innerHTML += `<option value="${c.id}">${escapeHtml(c.name)}</option>`;
+      });
+    }
+
+    function renderZoneOptions() {
+      const zone = $('zoneSelect');
+      zone.innerHTML = '<option value="">Elegí tu zona</option>';
+      state.zones.forEach(z => zone.innerHTML += `<option value="${z.id}">${escapeHtml(z.name)}</option>`);
+    }
+
+    function renderBankInfo() {
+      const box = $('bankInfoBox');
+      const preview = $('bankPreview');
+      if (!state.bank) {
+        box.textContent = 'Cargá los datos bancarios desde el panel admin para mostrarlos acá.';
+        preview.textContent = 'Todavía no hay datos cargados.';
+        return;
+      }
+      const html = `
+        <strong>Transferencia bancaria</strong><br>
+        Alias: ${escapeHtml(state.bank.alias || '-')}<br>
+        CBU/CVU: ${escapeHtml(state.bank.cbu || '-')}<br>
+        Titular: ${escapeHtml(state.bank.holder || '-')}<br>
+        Banco: ${escapeHtml(state.bank.bank_name || '-')}<br>
+        <span class="helper">${escapeHtml(state.bank.instructions || '')}</span>
+      `;
+      box.innerHTML = html;
+      preview.innerHTML = html;
+      $('bankAlias').value = state.bank.alias || '';
+      $('bankCbu').value = state.bank.cbu || '';
+      $('bankHolder').value = state.bank.holder || '';
+      $('bankName').value = state.bank.bank_name || '';
+      $('bankInstructions').value = state.bank.instructions || '';
+    }
+
+    function renderProducts() {
+      const grid = $('catalogGrid');
+      const q = $('searchInput').value.trim().toLowerCase();
+      const categoryId = $('categoryFilter').value;
+      const filtered = state.products.filter(p => {
+        const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q);
+        const matchesCategory = !categoryId || p.category_id === categoryId;
+        return matchesSearch && matchesCategory;
+      });
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="card panel-pad">No hay productos para mostrar.</div>';
+        return;
+      }
+      grid.innerHTML = filtered.map(p => `
+        <div class="card product">
+          <img src="${escapeAttr(p.image_url || 'https://placehold.co/800x600?text=Cocina+Gourmet')}" alt="${escapeAttr(p.name)}">
+          <div class="product-body">
+            <div class="row between">
+              <strong>${escapeHtml(p.name)}</strong>
+              <span class="badge">${escapeHtml(p.categories?.name || 'Sin categoría')}</span>
+            </div>
+            <div class="muted">${escapeHtml(p.description || '')}</div>
+            <div class="row between">
+              <span class="price">${money(p.price)}</span>
+              <button class="btn" onclick="addToCart('${p.id}')">Agregar</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(productId) {
+      const product = state.products.find(p => p.id === productId);
+      if (!product) return;
+      const existing = state.cart.find(x => x.id === productId);
+      if (existing) existing.qty += 1;
+      else state.cart.push({ id: product.id, name: product.name, price: Number(product.price), qty: 1 });
+      renderCart();
+      toast('Producto agregado');
+    }
+    window.addToCart = addToCart;
+
+    function changeQty(productId, delta) {
+      const item = state.cart.find(x => x.id === productId);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) state.cart = state.cart.filter(x => x.id !== productId);
+      renderCart();
+    }
+    window.changeQty = changeQty;
+
+    function renderCart() {
+      const box = $('cartItems');
+      if (!state.cart.length) {
+        box.innerHTML = '<div class="helper">Todavía no agregaste productos.</div>';
+      } else {
+        box.innerHTML = state.cart.map(item => `
+          <div class="cart-item">
+            <div class="row between"><strong>${escapeHtml(item.name)}</strong><strong>${money(item.price * item.qty)}</strong></div>
+            <div style="height:8px"></div>
+            <div class="row between">
+              <div class="qty">
+                <button onclick="changeQty('${item.id}', -1)">-</button>
+                <span>${item.qty}</span>
+                <button onclick="changeQty('${item.id}', 1)">+</button>
+              </div>
+              <span class="muted">${money(item.price)} c/u</span>
+            </div>
+          </div>
+        `).join('');
+      }
+      const subtotal = state.cart.reduce((acc, x) => acc + x.price * x.qty, 0);
+      $('subtotalText').textContent = money(subtotal);
+    }
+
+    function renderAdminState() {
+      $('adminUserText').textContent = state.user ? state.user.email : '';
+      $('btnLogout').classList.toggle('hidden', !state.user);
+      $('authBox').classList.toggle('hidden', !!state.user);
+      $('adminContent').classList.toggle('hidden', !state.adminReady);
+      if (state.user && !state.adminReady) {
+        $('authBox').classList.remove('hidden');
+      }
+    }
+
+    function renderAdminProducts() {
+      const list = $('adminProductsList');
+      if (!state.products.length) {
+        list.innerHTML = '<div class="helper">Todavía no hay productos.</div>';
+        return;
+      }
+      list.innerHTML = state.products.map(p => `
+        <div class="list-item">
+          <div class="row between">
+            <div>
+              <strong>${escapeHtml(p.name)}</strong><br>
+              <span class="helper">${money(p.price)} · ${escapeHtml(p.categories?.name || 'Sin categoría')}</span>
+            </div>
+            <button class="btn danger" onclick="deleteProduct('${p.id}')">Eliminar</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    window.deleteProduct = async function(id) {
+      if (!confirm('¿Eliminar producto?')) return;
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) return toast(error.message);
+      await loadPublicData();
+      renderAll();
+      toast('Producto eliminado');
+    }
+
+    function renderZonesAdmin() {
+      const list = $('zonesList');
+      if (!state.zones.length) {
+        list.innerHTML = '<div class="helper">Todavía no hay zonas.</div>';
+        return;
+      }
+      list.innerHTML = state.zones.map(z => `
+        <div class="list-item">
+          <div class="row between">
+            <div>
+              <strong>${escapeHtml(z.name)}</strong><br>
+              <span class="helper">WhatsApp: ${escapeHtml(z.whatsapp)} · Envío: ${money(z.delivery_fee || 0)}</span>
+            </div>
+            <button class="btn danger" onclick="deleteZone('${z.id}')">Eliminar</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    window.deleteZone = async function(id) {
+      if (!confirm('¿Eliminar zona?')) return;
+      const { error } = await supabase.from('zones').delete().eq('id', id);
+      if (error) return toast(error.message);
+      await loadPublicData();
+      renderAll();
+      toast('Zona eliminada');
+    }
+
+    function renderOrders() {
+      const list = $('ordersList');
+      if (!state.orders.length) {
+        list.innerHTML = '<div class="helper">Todavía no hay pedidos guardados.</div>';
+        return;
+      }
+      list.innerHTML = state.orders.map(o => {
+        const items = (o.order_items || []).map(i => `${i.quantity} x ${i.product?.name || 'Producto'}`).join(', ');
+        return `
+          <div class="list-item">
+            <div class="row between">
+              <div>
+                <strong>${escapeHtml(o.customer_name)}</strong> <span class="badge pending">${escapeHtml(o.status)}</span><br>
+                <span class="helper">${new Date(o.created_at).toLocaleString('es-AR')}</span><br>
+                <span class="helper">Zona: ${escapeHtml(o.zone_name || '-')} · Pago: ${escapeHtml(o.payment_method)}</span><br>
+                <span class="helper">${escapeHtml(o.customer_phone)} · ${escapeHtml(o.customer_address || '')}</span><br>
+                <span class="helper">${escapeHtml(items)}</span>
+              </div>
+              <div style="text-align:right">
+                <strong>${money(o.total_amount)}</strong><br>
+                <button class="btn secondary" onclick="markDone('${o.id}')">Marcar confirmado</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    window.markDone = async function(id) {
+      const { error } = await supabase.from('orders').update({ status: 'confirmado' }).eq('id', id);
+      if (error) return toast(error.message);
+      await loadAdminOrders();
+      toast('Pedido actualizado');
+    }
+
+    async function placeOrder() {
+      if (!supabase) return toast('Primero conectá Supabase');
+      if (!state.cart.length) return toast('Tu carrito está vacío');
+      const zoneId = $('zoneSelect').value;
+      const zone = state.zones.find(z => z.id === zoneId);
+      if (!zone) return toast('Elegí una zona');
+      const customer_name = $('customerName').value.trim();
+      const customer_phone = $('customerPhone').value.trim();
+      const customer_address = $('customerAddress').value.trim();
+      const payment_method = $('paymentMethod').value;
+      const notes = $('customerNotes').value.trim();
+      if (!customer_name || !customer_phone || !customer_address) return toast('Completá nombre, WhatsApp y dirección');
+
+      const subtotal = state.cart.reduce((acc, x) => acc + x.price * x.qty, 0);
+      const total = subtotal + Number(zone.delivery_fee || 0);
+      if (zone.min_order && subtotal < Number(zone.min_order)) {
+        return toast(`El pedido mínimo para ${zone.name} es ${money(zone.min_order)}`);
+      }
+
+      const orderPayload = {
+        customer_name,
+        customer_phone,
+        customer_address,
+        payment_method,
+        notes,
+        zone_id: zone.id,
+        zone_name: zone.name,
+        total_amount: total,
+        status: 'pendiente'
+      };
+
+      const { data: orderData, error: orderError } = await supabase.from('orders').insert(orderPayload).select().single();
+      if (orderError) return toast(orderError.message);
+
+      const itemsPayload = state.cart.map(item => ({
+        order_id: orderData.id,
+        product_id: item.id,
+        quantity: item.qty,
+        unit_price: item.price,
+        line_total: item.price * item.qty
+      }));
+      const { error: itemsError } = await supabase.from('order_items').insert(itemsPayload);
+      if (itemsError) return toast(itemsError.message);
+
+      const message = buildWhatsappMessage(orderData, itemsPayload, zone);
+      const url = `https://wa.me/${zone.whatsapp}?text=${encodeURIComponent(message)}`;
+      state.cart = [];
+      renderCart();
+      $('customerName').value = '';
+      $('customerPhone').value = '';
+      $('customerAddress').value = '';
+      $('customerNotes').value = '';
+      toast('Pedido guardado');
+      window.open(url, '_blank');
+      if (state.adminReady) await loadAdminOrders();
+    }
+
+    function buildWhatsappMessage(order, items, zone) {
+      const readableItems = items.map(i => {
+        const p = state.products.find(x => x.id === i.product_id);
+        return `- ${i.quantity} x ${p?.name || 'Producto'} (${money(i.line_total)})`;
+      }).join('\n');
+      return `Hola Cocina Gourmet. Quiero confirmar este pedido:%0A%0ACliente: ${order.customer_name}%0AWhatsApp: ${order.customer_phone}%0ADirección: ${order.customer_address}%0AZona: ${zone.name}%0APago: ${order.payment_method}%0A%0AProductos:%0A${readableItems}%0A%0AEnvío: ${money(zone.delivery_fee || 0)}%0ATotal: ${money(order.total_amount)}%0A%0AObservaciones: ${order.notes || '-'}%0A%0AID pedido: ${order.id}`.replace(/%0A/g,'\n');
+    }
+
+    async function login() {
+      const email = $('loginEmail').value.trim();
+      const password = $('loginPassword').value;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return toast(error.message);
+      await loadProfile();
+      renderAdminState();
+      toast('Sesión iniciada');
+    }
+
+    async function signup() {
+      const email = $('signupEmail').value.trim();
+      const password = $('signupPassword').value;
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) return toast(error.message);
+      toast('Usuario creado. Ahora promovelo a admin con el SQL del instructivo.');
+    }
+
+    async function logout() {
+      await supabase.auth.signOut();
+      toast('Sesión cerrada');
+    }
+
+    async function saveCategory() {
+      const name = $('newCategoryName').value.trim();
+      if (!name) return toast('Escribí una categoría');
+      const { error } = await supabase.from('categories').insert({ name });
+      if (error) return toast(error.message);
+      $('newCategoryName').value = '';
+      await loadPublicData();
+      renderAll();
+      toast('Categoría guardada');
+    }
+
+    async function uploadProductImage(file) {
+      if (!file) return null;
+      const ext = file.name.split('.').pop();
+      const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('product-images').upload(path, file, { upsert: false, contentType: file.type });
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+      return data.publicUrl;
+    }
+
+    async function saveProduct() {
+      const name = $('productName').value.trim();
+      const category_id = $('productCategory').value || null;
+      const price = Number($('productPrice').value || 0);
+      const stock = $('productStock').value ? Number($('productStock').value) : null;
+      const description = $('productDescription').value.trim();
+      const imageFile = $('productImageFile').files[0];
+      let image_url = $('productImageUrl').value.trim() || null;
+      if (!name || !price) return toast('Completá nombre y precio');
+      try {
+        if (imageFile) image_url = await uploadProductImage(imageFile);
+        const { error } = await supabase.from('products').insert({ name, category_id, price, stock, description, image_url, active: true });
+        if (error) return toast(error.message);
+        ['productName','productPrice','productStock','productDescription','productImageUrl'].forEach(id => $(id).value = '');
+        $('productImageFile').value = '';
+        await loadPublicData();
+        renderAll();
+        toast('Producto guardado');
+      } catch (e) {
+        console.error(e);
+        toast(e.message || 'No pude subir la imagen');
+      }
+    }
+
+    async function saveZone() {
+      const name = $('zoneName').value.trim();
+      const whatsapp = $('zoneWhatsapp').value.trim();
+      const delivery_fee = $('zoneDelivery').value ? Number($('zoneDelivery').value) : 0;
+      const min_order = $('zoneMinOrder').value ? Number($('zoneMinOrder').value) : null;
+      if (!name || !whatsapp) return toast('Completá zona y WhatsApp');
+      const { error } = await supabase.from('zones').insert({ name, whatsapp, delivery_fee, min_order, active: true });
+      if (error) return toast(error.message);
+      ['zoneName','zoneWhatsapp','zoneDelivery','zoneMinOrder'].forEach(id => $(id).value = '');
+      await loadPublicData();
+      renderAll();
+      toast('Zona guardada');
+    }
+
+    async function saveBank() {
+      const value = {
+        alias: $('bankAlias').value.trim(),
+        cbu: $('bankCbu').value.trim(),
+        holder: $('bankHolder').value.trim(),
+        bank_name: $('bankName').value.trim(),
+        instructions: $('bankInstructions').value.trim()
+      };
+      const { error } = await supabase.from('settings').upsert({ key: 'bank_info', value });
+      if (error) return toast(error.message);
+      state.bank = value;
+      renderBankInfo();
+      toast('Datos bancarios guardados');
+    }
+
+    function escapeHtml(str='') {
+      return str.replace(/[&<>"]/g, s => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[s]));
+    }
+    function escapeAttr(str='') { return escapeHtml(str).replace(/'/g, '&#39;'); }
+
+    document.addEventListener('click', (e) => {
+      const tab = e.target.closest('.tab');
+      if (!tab) return;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const key = tab.dataset.tab;
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+      $(`tab-${key}`).classList.remove('hidden');
+    });
+
+    $('btnConfig').addEventListener('click', promptConnection);
+    $('btnAdminToggle').addEventListener('click', () => $('adminPanel').style.display = $('adminPanel').style.display === 'block' ? 'none' : 'block');
+    $('btnCartTop').addEventListener('click', () => $('cartPanel').scrollIntoView({ behavior: 'smooth' }));
+    $('searchInput').addEventListener('input', renderProducts);
+    $('categoryFilter').addEventListener('change', renderProducts);
+    $('btnPlaceOrder').addEventListener('click', placeOrder);
+    $('btnLogin').addEventListener('click', login);
+    $('btnSignup').addEventListener('click', signup);
+    $('btnLogout').addEventListener('click', logout);
+    $('btnSaveCategory').addEventListener('click', saveCategory);
+    $('btnSaveProduct').addEventListener('click', saveProduct);
+    $('btnSaveZone').addEventListener('click', saveZone);
+    $('btnSaveBank').addEventListener('click', saveBank);
+
+    initSupabase();
+  </script>
+</body>
+</html>
