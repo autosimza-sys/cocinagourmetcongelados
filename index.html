@@ -3,741 +3,517 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cocina Gourmet | Alimentos Congelados</title>
+    <title>Cocina Gourmet | Admin & Tienda</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-dark: #0f172a;
-            --card-dark: #1e293b;
-            --accent-green: #10b981;
-            --accent-blue: #3b82f6;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg-dark);
-            color: #f8fafc;
-            scroll-behavior: smooth;
-            overflow-x: hidden;
-        }
-
-        .glass-header {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .product-card {
-            background: var(--card-dark);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-
-        .product-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent-green);
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 10px;
-        }
-
-        .btn-gradient {
-            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
-            transition: opacity 0.3s ease;
-        }
-        .btn-gradient:hover {
-            opacity: 0.9;
-        }
-
-        .badge-status {
-            padding: 2px 8px;
-            border-radius: 99px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .modal-overlay {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-        }
-
-        .cart-dot {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ef4444;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #2563eb); transition: all 0.3s; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+        input, select { background: #1e293b; border: 1px solid #334155; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="custom-scrollbar">
+<body class="min-h-screen">
 
-    <!-- HEADER -->
-    <header class="glass-header fixed top-0 w-full z-50 px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 btn-gradient rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-500/20">
-                CG
-            </div>
-            <div>
-                <h1 class="text-lg font-bold leading-tight">Cocina Gourmet</h1>
-                <p class="text-[10px] text-slate-400 uppercase tracking-widest">Premium Frozen Foods</p>
-            </div>
-        </div>
-        
-        <div class="flex items-center gap-2 lg:gap-4">
-            <button onclick="showView('settings')" class="p-2 text-slate-400 hover:text-white transition-colors" title="Configuración">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-            <button onclick="checkAdminAccess()" class="p-2 text-slate-400 hover:text-white transition-colors" title="Admin">
-                <i class="fa-solid fa-user-shield"></i>
-            </button>
-            <button onclick="toggleCart()" class="relative p-2 text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span id="cart-count" class="cart-dot hidden">0</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- MAIN CONTENT -->
-    <main id="app-container" class="pt-24 pb-12 px-4 max-w-7xl mx-auto min-h-screen">
-        
-        <!-- CLIENT VIEW -->
-        <div id="view-client" class="animate-fade-in">
-            <!-- Hero -->
-            <section class="mb-10 text-center lg:text-left flex flex-col lg:flex-row items-center justify-between gap-8">
-                <div class="max-w-xl">
-                    <h2 class="text-4xl lg:text-6xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-blue-500">
-                        Calidad gourmet en tu mesa.
-                    </h2>
-                    <p class="text-slate-400 text-lg mb-6">
-                        Seleccionamos los mejores ingredientes, los preparamos con amor y los congelamos al vacío para que disfrutes como en un restaurante.
-                    </p>
-                    <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
-                        <span class="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-full text-sm border border-slate-700">
-                            <i class="fa-solid fa-truck-fast text-emerald-400"></i> Envíos por zona
-                        </span>
-                        <span class="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-full text-sm border border-slate-700">
-                            <i class="fa-brands fa-whatsapp text-emerald-400"></i> Pedido directo
-                        </span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Filters & Search -->
-            <div class="sticky top-20 z-40 bg-slate-900/80 backdrop-blur-md py-4 mb-8 flex flex-col md:flex-row gap-4 border-b border-slate-800">
-                <div class="relative flex-1">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                    <input type="text" id="search-input" oninput="filterProducts()" placeholder="Buscar platos, postres, carnes..." 
-                        class="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500 transition-all">
-                </div>
-                <div class="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                    <button onclick="setCategory('all')" id="cat-all" class="cat-filter whitespace-nowrap bg-emerald-600 text-white px-5 py-2 rounded-xl text-sm font-medium transition-all">
-                        Todos
-                    </button>
-                    <div id="category-chips" class="flex gap-2">
-                        <!-- Categorías dinámicas -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Products Grid -->
-            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <div class="col-span-full py-20 text-center text-slate-500">
-                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-emerald-500 mb-4"></div>
-                    <p>Iniciando catálogo...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- SETTINGS VIEW -->
-        <div id="view-settings" class="hidden animate-fade-in max-w-lg mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl">
-            <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-                <i class="fa-solid fa-cloud-bolt text-emerald-400"></i> Conexión Supabase
-            </h3>
-            <p class="text-xs text-slate-400 mb-4 italic">Por favor, ingresa las credenciales de Supabase para activar la aplicación.</p>
+    <!-- Configuración Inicial / Login -->
+    <div id="setup-screen" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4">
+        <div class="glass p-8 rounded-2xl w-full max-w-md shadow-2xl">
+            <h2 class="text-2xl font-bold mb-6 text-center">Configuración Supabase</h2>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Supabase URL</label>
-                    <input type="text" id="sb-url" placeholder="https://xyz.supabase.co" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-emerald-500">
+                    <label class="block text-sm mb-1 text-slate-400">URL del Proyecto</label>
+                    <input type="text" id="supabase-url" class="w-full" placeholder="https://xyz.supabase.co">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Anon Key</label>
-                    <input type="password" id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 focus:outline-none focus:border-emerald-500">
+                    <label class="block text-sm mb-1 text-slate-400">Clave ANON (Pública)</label>
+                    <input type="password" id="supabase-key" class="w-full" placeholder="eyJhbGciOiJIUzI1Ni...">
                 </div>
-                <div class="pt-4 flex gap-3">
-                    <button onclick="saveSettings()" class="flex-1 btn-gradient py-3 rounded-xl font-bold text-white shadow-lg shadow-emerald-500/20">Guardar y Conectar</button>
-                    <button id="btn-cancel-settings" onclick="showView('client')" class="px-6 py-3 bg-slate-700 rounded-xl font-bold hover:bg-slate-600 transition-colors">Volver</button>
-                </div>
+                <button onclick="saveConnection()" class="w-full btn-primary py-3 rounded-xl font-bold mt-4">Guardar y Conectar</button>
             </div>
-        </div>
-
-        <!-- ADMIN VIEW -->
-        <div id="view-admin" class="hidden animate-fade-in">
-            <div class="flex items-center justify-between mb-8">
-                <h3 class="text-3xl font-extrabold">Panel de Control</h3>
-                <button onclick="showView('client')" class="bg-slate-800 px-4 py-2 rounded-lg text-sm hover:bg-slate-700 transition-colors">Ir a Tienda</button>
-            </div>
-
-            <div class="flex gap-4 border-b border-slate-800 mb-8 overflow-x-auto no-scrollbar">
-                <button onclick="setAdminTab('products')" class="admin-tab border-b-2 border-emerald-500 text-emerald-400 px-4 py-2 font-semibold transition-all" data-tab="products">Productos</button>
-                <button onclick="setAdminTab('orders')" class="admin-tab border-b-2 border-transparent text-slate-500 px-4 py-2 font-semibold transition-all" data-tab="orders">Pedidos</button>
-                <button onclick="setAdminTab('zones')" class="admin-tab border-b-2 border-transparent text-slate-500 px-4 py-2 font-semibold transition-all" data-tab="zones">Zonas y Bancos</button>
-            </div>
-
-            <div id="admin-content">
-                <!-- Inyección dinámica -->
-            </div>
-        </div>
-    </main>
-
-    <!-- SHOPPING CART DRAWER -->
-    <div id="cart-drawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-slate-900 border-l border-slate-800 z-[60] shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
-        <div class="p-6 border-b border-slate-800 flex justify-between items-center">
-            <h3 class="text-xl font-bold flex items-center gap-3">
-                <i class="fa-solid fa-basket-shopping text-emerald-400"></i> Mi Carrito
-            </h3>
-            <button onclick="toggleCart()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
-        </div>
-
-        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar"></div>
-
-        <div id="cart-footer" class="p-6 bg-slate-800/50 border-t border-slate-800 space-y-4">
-            <div class="flex justify-between text-lg font-bold">
-                <span>Total:</span>
-                <span id="cart-total" class="text-emerald-400">$0.00</span>
-            </div>
-            
-            <div id="checkout-form" class="hidden space-y-4 pt-4 border-t border-slate-700">
-                <input type="text" id="cust-name" placeholder="Tu Nombre Completo" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm focus:border-emerald-500 outline-none">
-                <input type="tel" id="cust-phone" placeholder="WhatsApp (ej: 54911...)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm focus:border-emerald-500 outline-none">
-                <input type="text" id="cust-address" placeholder="Dirección de entrega" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm focus:border-emerald-500 outline-none">
-                
-                <select id="cust-zone" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm focus:border-emerald-500 outline-none">
-                    <option value="">Selecciona tu zona</option>
-                </select>
-
-                <select id="cust-payment" onchange="toggleBankDetails(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm focus:border-emerald-500 outline-none">
-                    <option value="efectivo">Efectivo al recibir</option>
-                    <option value="transferencia">Transferencia Bancaria</option>
-                </select>
-
-                <div id="bank-info-display" class="hidden p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs space-y-1">
-                    <p class="font-bold text-emerald-400">Datos para transferencia:</p>
-                    <p id="bank-alias-txt"></p>
-                    <p id="bank-cbu-txt"></p>
-                    <p id="bank-holder-txt"></p>
-                </div>
-
-                <textarea id="cust-notes" placeholder="Observaciones..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm focus:border-emerald-500 outline-none h-20"></textarea>
-
-                <button onclick="processOrder()" class="w-full btn-gradient py-4 rounded-xl font-bold text-white shadow-xl shadow-emerald-500/30 flex items-center justify-center gap-2">
-                    <i class="fa-brands fa-whatsapp text-xl"></i> ENVIAR PEDIDO POR WHATSAPP
-                </button>
-            </div>
-
-            <button id="btn-next-step" onclick="showCheckout()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-bold text-white transition-all">
-                Continuar con el Pedido
-            </button>
         </div>
     </div>
 
-    <!-- TOAST -->
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-full bg-emerald-600 text-white font-bold shadow-2xl opacity-0 translate-y-10 transition-all pointer-events-none"></div>
+    <!-- Login de Administrador -->
+    <div id="admin-login" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-slate-950/80 p-4">
+        <div class="glass p-8 rounded-2xl w-full max-w-sm shadow-2xl">
+            <h2 class="text-xl font-bold mb-4 text-center text-blue-400">Acceso Administrador</h2>
+            <div class="space-y-4">
+                <input type="password" id="admin-pass-input" class="w-full" placeholder="Contraseña">
+                <div class="flex gap-2">
+                    <button onclick="checkAdminPassword()" class="flex-1 btn-primary py-2 rounded-lg font-bold">Entrar</button>
+                    <button onclick="toggleLogin(false)" class="flex-1 bg-slate-700 py-2 rounded-lg font-bold">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        // ESTADO GLOBAL
-        let state = {
-            view: 'client',
-            products: [],
-            categories: [],
-            zones: [],
-            settings: {},
-            cart: JSON.parse(localStorage.getItem('cg_cart') || '[]'),
-            currentCategory: 'all',
-            config: JSON.parse(localStorage.getItem('cg_supabase') || '{"url":"","key":""}'),
-            adminTab: 'products'
-        };
+    <!-- Navegación Principal -->
+    <nav class="glass sticky top-0 z-30 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl shadow-lg shadow-blue-500/20">CG</div>
+            <div>
+                <h1 class="font-bold text-lg leading-none">Cocina Gourmet</h1>
+                <span class="text-xs text-blue-400 font-medium uppercase tracking-wider">Premium Frozen Foods</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4">
+            <button onclick="toggleLogin(true)" id="admin-btn" class="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-blue-400">
+                <i class="fa-solid fa-user-shield"></i>
+            </button>
+            <button onclick="showCart()" class="relative p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-blue-400">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span id="cart-count" class="absolute -top-1 -right-1 bg-blue-600 text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-slate-900">0</span>
+            </button>
+            <button onclick="showSetup()" class="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-cog"></i>
+            </button>
+        </div>
+    </nav>
 
-        // INICIALIZACIÓN
-        window.onload = () => {
-            const storedConfig = localStorage.getItem('cg_supabase');
-            if (storedConfig) {
-                const parsed = JSON.parse(storedConfig);
-                if (parsed.url && parsed.key) {
-                    state.config = parsed;
-                    document.getElementById('sb-url').value = parsed.url;
-                    document.getElementById('sb-key').value = parsed.key;
-                    initData();
-                } else {
-                    showView('settings');
-                }
-            } else {
-                showView('settings');
-            }
-            updateCartUI();
-        };
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- VISTA TIENDA -->
+        <section id="shop-view">
+            <div class="flex gap-4 mb-8 overflow-x-auto pb-2 no-scrollbar" id="category-filters">
+                <button onclick="filterByCategory('all')" class="px-5 py-2 rounded-full glass whitespace-nowrap active-filter border-blue-500 border">Todos</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="products-grid">
+                <!-- Productos dinámicos -->
+            </div>
+        </section>
 
-        async function initData() {
-            if (!state.config.url || !state.config.key) return;
-            
-            try {
-                await Promise.all([
-                    fetchProducts(),
-                    fetchCategories(),
-                    fetchZones(),
-                    fetchSettings()
-                ]);
-                renderClientView();
-            } catch (err) {
-                console.error("Error inicializando datos:", err);
-                showToast("Error al conectar con Supabase", "error");
-            }
-        }
+        <!-- VISTA PANEL ADMIN -->
+        <section id="admin-view" class="hidden animate-fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <h2 class="text-3xl font-bold">Panel de Control</h2>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="showProductModal()" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
+                        <i class="fa-solid fa-plus"></i> Nuevo Producto
+                    </button>
+                    <button onclick="logoutAdmin()" class="flex-1 md:flex-none bg-red-600/20 text-red-400 border border-red-600/30 px-4 py-2 rounded-lg font-bold hover:bg-red-600/30 transition-all">Salir</button>
+                </div>
+            </div>
 
-        // SUPABASE WRAPPERS (CORREGIDOS)
-        async function sbFetch(table, params = '') {
-            if (!state.config.url) throw new Error("URL de Supabase no configurada");
-            
-            const baseUrl = state.config.url.endsWith('/') ? state.config.url.slice(0, -1) : state.config.url;
-            const fullUrl = `${baseUrl}/rest/v1/${table}${params ? '?' + params : ''}`;
-            
-            const res = await fetch(fullUrl, {
-                headers: {
-                    "apikey": state.config.key,
-                    "Authorization": `Bearer ${state.config.key}`,
-                    "Content-Type": "application/json",
-                    "Prefer": "return=representation"
-                }
-            });
-            if (!res.ok) throw new Error(await res.text());
-            return res.json();
-        }
+            <!-- Tabs Admin -->
+            <div class="flex border-b border-slate-700 mb-6 overflow-x-auto no-scrollbar">
+                <button onclick="switchTab('products')" class="px-6 py-3 border-b-2 border-blue-500 font-bold tab-btn transition-all whitespace-nowrap" id="tab-products">Productos</button>
+                <button onclick="switchTab('orders')" class="px-6 py-3 border-b-2 border-transparent font-bold tab-btn transition-all whitespace-nowrap" id="tab-orders">Pedidos</button>
+                <button onclick="switchTab('settings')" class="px-6 py-3 border-b-2 border-transparent font-bold tab-btn transition-all whitespace-nowrap" id="tab-settings">Zonas y Bancos</button>
+            </div>
 
-        async function sbAction(table, method, body, id = '') {
-            if (!state.config.url) throw new Error("URL de Supabase no configurada");
-            
-            const baseUrl = state.config.url.endsWith('/') ? state.config.url.slice(0, -1) : state.config.url;
-            const url = id ? `${baseUrl}/rest/v1/${table}?id=eq.${id}` : `${baseUrl}/rest/v1/${table}`;
-            
-            const res = await fetch(url, {
-                method,
-                headers: {
-                    "apikey": state.config.key,
-                    "Authorization": `Bearer ${state.config.key}`,
-                    "Content-Type": "application/json",
-                    "Prefer": "return=representation"
-                },
-                body: body ? JSON.stringify(body) : undefined
-            });
-            if (!res.ok) throw new Error(await res.text());
-            return res.json();
-        }
+            <div id="admin-content" class="glass rounded-2xl p-6">
+                <!-- Contenido dinámico del panel -->
+            </div>
+        </section>
+    </main>
 
-        // DATA ACTIONS
-        async function fetchProducts() { state.products = await sbFetch('products', 'select=*,categories(name)&order=created_at.desc'); }
-        async function fetchCategories() { state.categories = await sbFetch('categories', 'select=*&order=name.asc'); }
-        async function fetchZones() { state.zones = await sbFetch('zones', 'select=*&order=name.asc'); }
-        async function fetchSettings() {
-            const data = await sbFetch('settings', 'select=*&limit=1');
-            state.settings = data[0] || {};
-        }
-
-        // VIEWS
-        function showView(viewName) {
-            state.view = viewName;
-            document.querySelectorAll('#app-container > div').forEach(div => div.classList.add('hidden'));
-            const target = document.getElementById(`view-${viewName}`);
-            if (target) target.classList.remove('hidden');
-            
-            // Ocultar botón cancelar si no hay config
-            const cancelBtn = document.getElementById('btn-cancel-settings');
-            if (cancelBtn) {
-                cancelBtn.style.display = (state.config.url && state.config.key) ? 'block' : 'none';
-            }
-
-            if (viewName === 'admin') setAdminTab(state.adminTab);
-            if (viewName === 'client') renderClientView();
-        }
-
-        function checkAdminAccess() {
-            if (!state.config.url || !state.config.key) {
-                showToast("Configura Supabase primero");
-                showView('settings');
-            } else {
-                showView('admin');
-            }
-        }
-
-        async function saveSettings() {
-            const url = document.getElementById('sb-url').value.trim();
-            const key = document.getElementById('sb-key').value.trim();
-            if (!url || !key) return showToast("Faltan datos");
-            
-            state.config = { url, key };
-            localStorage.setItem('cg_supabase', JSON.stringify(state.config));
-            
-            showToast("Conectando...");
-            try {
-                await initData();
-                showToast("Conexión exitosa");
-                showView('client');
-            } catch(e) {
-                showToast("Error de credenciales");
-            }
-        }
-
-        // CLIENT LOGIC
-        function renderClientView() {
-            const container = document.getElementById('category-chips');
-            container.innerHTML = state.categories.map(cat => `
-                <button onclick="setCategory('${cat.id}')" id="cat-${cat.id}" 
-                    class="cat-filter whitespace-nowrap bg-slate-800 text-slate-400 px-5 py-2 rounded-xl text-sm font-medium transition-all hover:bg-slate-700">
-                    ${cat.name}
-                </button>
-            `).join('');
-
-            const zoneSelect = document.getElementById('cust-zone');
-            zoneSelect.innerHTML = '<option value="">Selecciona tu zona</option>' + 
-                state.zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
-
-            filterProducts();
-        }
-
-        function setCategory(id) {
-            state.currentCategory = id;
-            document.querySelectorAll('.cat-filter').forEach(btn => {
-                btn.classList.remove('bg-emerald-600', 'text-white');
-                btn.classList.add('bg-slate-800', 'text-slate-400');
-            });
-            const activeBtn = document.getElementById(`cat-${id}`);
-            if (activeBtn) activeBtn.classList.add('bg-emerald-600', 'text-white');
-            filterProducts();
-        }
-
-        function filterProducts() {
-            const grid = document.getElementById('products-grid');
-            if (!grid) return;
-            const search = document.getElementById('search-input').value.toLowerCase();
-            
-            let filtered = state.products.filter(p => p.active);
-            if (state.currentCategory !== 'all') filtered = filtered.filter(p => p.category_id == state.currentCategory);
-            if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500">No hay productos disponibles.</div>`;
-                return;
-            }
-
-            grid.innerHTML = filtered.map(p => `
-                <div class="product-card rounded-2xl overflow-hidden flex flex-col p-4 animate-fade-in">
-                    <div class="relative h-48 rounded-xl overflow-hidden mb-4 bg-slate-700 flex items-center justify-center">
-                        <img src="${p.image_url || 'https://via.placeholder.com/300x300?text=Cocina+Gourmet'}" alt="${p.name}" class="w-full h-full object-cover">
-                        <div class="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg uppercase">
-                            ${p.categories?.name || 'Varios'}
-                        </div>
+    <!-- Modal Nuevo/Editar Producto -->
+    <div id="product-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+        <div class="glass p-8 rounded-2xl w-full max-w-lg shadow-2xl">
+            <h3 class="text-2xl font-bold mb-6 text-blue-400" id="modal-title">Nuevo Producto</h3>
+            <form id="product-form" class="space-y-4">
+                <input type="hidden" id="p-id">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Nombre del Producto</label>
+                    <input type="text" id="p-name" class="w-full" placeholder="Ej: Pizza de Muzzarella" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">Precio ($)</label>
+                        <input type="number" id="p-price" class="w-full" placeholder="0.00" required>
                     </div>
-                    <h4 class="text-lg font-bold mb-1">${p.name}</h4>
-                    <p class="text-emerald-400 font-bold text-xl mb-4">$${p.price.toLocaleString()}</p>
-                    <div class="mt-auto flex gap-2">
-                        <div class="flex items-center bg-slate-900 rounded-lg p-1">
-                            <button onclick="updateQty('${p.id}', -1)" class="w-8 h-8 flex items-center justify-center text-slate-400">-</button>
-                            <span id="qty-${p.id}" class="w-8 text-center text-sm font-bold">1</span>
-                            <button onclick="updateQty('${p.id}', 1)" class="w-8 h-8 flex items-center justify-center text-slate-400">+</button>
-                        </div>
-                        <button onclick="addToCart('${p.id}')" class="flex-1 btn-gradient rounded-lg text-white font-bold text-sm">Agregar</button>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">Categoría</label>
+                        <select id="p-category" class="w-full" required>
+                            <option value="">Cargando...</option>
+                        </select>
                     </div>
                 </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Imagen (Subir archivo)</label>
+                    <input type="file" id="p-file" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500" accept="image/*">
+                    <p class="text-[10px] text-slate-500 mt-2">O pega una URL directa abajo si prefieres</p>
+                    <input type="text" id="p-image-url" class="w-full mt-1" placeholder="https://ejemplo.com/imagen.jpg">
+                </div>
+                <div class="flex gap-3 pt-6">
+                    <button type="submit" id="btn-save-product" class="flex-1 bg-emerald-600 py-3 rounded-xl font-bold hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/20">Guardar</button>
+                    <button type="button" onclick="closeProductModal()" class="flex-1 bg-slate-700 py-3 rounded-xl font-bold hover:bg-slate-600 transition-all">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Cambiamos el nombre de la variable para evitar conflicto con la librería global de Supabase
+        let supabaseClient = null;
+        let isAdmin = false;
+        let cart = [];
+        let categories = [];
+        let currentFilter = 'all';
+
+        // --- Inicialización ---
+        window.onload = () => {
+            const url = localStorage.getItem('sb-url');
+            const key = localStorage.getItem('sb-key');
+            if (url && key) {
+                initSupabase(url, key);
+            } else {
+                showSetup();
+            }
+        };
+
+        function showSetup() { document.getElementById('setup-screen').classList.remove('hidden'); }
+        function hideSetup() { document.getElementById('setup-screen').classList.add('hidden'); }
+
+        function saveConnection() {
+            const url = document.getElementById('supabase-url').value.trim();
+            const key = document.getElementById('supabase-key').value.trim();
+            if (url && key) {
+                localStorage.setItem('sb-url', url);
+                localStorage.setItem('sb-key', key);
+                initSupabase(url, key);
+                hideSetup();
+            } else {
+                alert("Por favor completa ambos campos");
+            }
+        }
+
+        async function initSupabase(url, key) {
+            try {
+                // 'supabase' es el objeto global de la librería. Nosotros usamos supabaseClient para nuestras llamadas.
+                if (typeof supabase === 'undefined') {
+                    throw new Error("Librería de Supabase no cargada correctamente.");
+                }
+                supabaseClient = supabase.createClient(url, key);
+                await loadAppData();
+                renderShop();
+            } catch (e) {
+                console.error("Error init:", e);
+                alert("Error crítico al inicializar conexión.");
+            }
+        }
+
+        async function loadAppData() {
+            try {
+                const { data: cats, error } = await supabaseClient.from('categories').select('*');
+                if (error) throw error;
+                categories = cats || [];
+                updateCategoryUI();
+                updateCategorySelects();
+            } catch (e) {
+                console.error("Error loading cats:", e);
+            }
+        }
+
+        function updateCategoryUI() {
+            const filterContainer = document.getElementById('category-filters');
+            const allBtn = `<button onclick="filterByCategory('all')" class="px-5 py-2 rounded-full glass whitespace-nowrap border ${currentFilter === 'all' ? 'border-blue-500' : 'border-transparent'}">Todos</button>`;
+            const catBtns = categories.map(c => `
+                <button onclick="filterByCategory('${c.id}')" class="px-5 py-2 rounded-full glass whitespace-nowrap border ${currentFilter === c.id ? 'border-blue-500' : 'border-transparent'}">
+                    ${c.name}
+                </button>
             `).join('');
+            filterContainer.innerHTML = allBtn + catBtns;
         }
 
-        // CART ACTIONS
-        function updateQty(id, delta) {
-            const el = document.getElementById(`qty-${id}`);
-            if (!el) return;
-            let val = parseInt(el.innerText) + delta;
-            if (val < 1) val = 1;
-            el.innerText = val;
+        function filterByCategory(id) {
+            currentFilter = id;
+            updateCategoryUI();
+            renderShop();
         }
 
-        function addToCart(id) {
-            const product = state.products.find(p => p.id == id);
-            const qty = parseInt(document.getElementById(`qty-${id}`).innerText);
-            const existing = state.cart.find(item => item.id == id);
-            
-            if (existing) existing.qty += qty;
-            else state.cart.push({ id: product.id, name: product.name, price: product.price, qty: qty, image: product.image_url });
-            
-            localStorage.setItem('cg_cart', JSON.stringify(state.cart));
-            updateCartUI();
-            showToast(`¡${product.name} agregado!`);
-            document.getElementById(`qty-${id}`).innerText = "1";
-        }
-
-        function toggleCart() { document.getElementById('cart-drawer').classList.toggle('translate-x-full'); }
-
-        function updateCartUI() {
-            const container = document.getElementById('cart-items');
-            const totalEl = document.getElementById('cart-total');
-            const countEl = document.getElementById('cart-count');
-            
-            if (state.cart.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 text-slate-500">Tu carrito está vacío.</div>`;
-                totalEl.innerText = "$0.00";
-                countEl.classList.add('hidden');
-                document.getElementById('checkout-form').classList.add('hidden');
-                document.getElementById('btn-next-step').classList.add('hidden');
+        // --- Gestión de Admin ---
+        function toggleLogin(show) {
+            if (isAdmin) {
+                showAdminView();
                 return;
             }
-
-            countEl.classList.remove('hidden');
-            countEl.innerText = state.cart.reduce((a, b) => a + b.qty, 0);
-            document.getElementById('btn-next-step').classList.remove('hidden');
-
-            let total = 0;
-            container.innerHTML = state.cart.map((item, idx) => {
-                total += item.price * item.qty;
-                return `
-                    <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-                        <img src="${item.image || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-lg object-cover">
-                        <div class="flex-1">
-                            <h5 class="text-sm font-bold">${item.name}</h5>
-                            <p class="text-xs text-slate-400">${item.qty} x $${item.price.toLocaleString()}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-bold text-emerald-400">$${(item.qty * item.price).toLocaleString()}</p>
-                            <button onclick="removeFromCart(${idx})" class="text-[10px] text-red-400">Quitar</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            totalEl.innerText = `$${total.toLocaleString()}`;
+            document.getElementById('admin-login').classList.toggle('hidden', !show);
         }
 
-        function removeFromCart(idx) {
-            state.cart.splice(idx, 1);
-            localStorage.setItem('cg_cart', JSON.stringify(state.cart));
-            updateCartUI();
-        }
-
-        function showCheckout() {
-            document.getElementById('checkout-form').classList.remove('hidden');
-            document.getElementById('btn-next-step').classList.add('hidden');
-            document.getElementById('bank-alias-txt').innerText = `Alias: ${state.settings.bank_alias || '-'}`;
-            document.getElementById('bank-cbu-txt').innerText = `CBU/CVU: ${state.settings.bank_cbu || '-'}`;
-            document.getElementById('bank-holder-txt').innerText = `Titular: ${state.settings.bank_holder || '-'}`;
-        }
-
-        function toggleBankDetails(val) {
-            document.getElementById('bank-info-display').classList.toggle('hidden', val !== 'transferencia');
-        }
-
-        async function processOrder() {
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
-            const address = document.getElementById('cust-address').value.trim();
-            const zoneId = document.getElementById('cust-zone').value;
-            const payment = document.getElementById('cust-payment').value;
-            const notes = document.getElementById('cust-notes').value.trim();
-
-            if (!name || !phone || !address || !zoneId) return showToast("Faltan datos de entrega");
-
-            const zone = state.zones.find(z => z.id == zoneId);
-            const total = state.cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-
+        async function checkAdminPassword() {
+            const pass = document.getElementById('admin-pass-input').value;
             try {
-                const orderData = await sbAction('orders', 'POST', {
-                    customer_name: name, customer_phone: phone, customer_address: address,
-                    zone_id: zoneId, payment_method: payment, notes: notes, total_amount: total
-                });
+                const { data, error } = await supabaseClient.from('config').select('value').eq('key', 'admin_password').single();
                 
-                const orderId = orderData[0].id;
-                const itemsToSave = state.cart.map(i => ({
-                    order_id: orderId, product_name: i.name, unit_price: i.price, quantity: i.qty, subtotal: i.price * i.qty
-                }));
-                await sbAction('order_items', 'POST', itemsToSave);
-
-                let msg = `*PEDIDO COCINA GOURMET*\n👤 *Cliente:* ${name}\n📍 *Dir:* ${address}\n🌍 *Zona:* ${zone.name}\n💳 *Pago:* ${payment}\n----------------\n`;
-                state.cart.forEach(i => { msg += `• ${i.qty}x ${i.name} ($${(i.qty * i.price).toLocaleString()})\n`; });
-                msg += `----------------\n💰 *TOTAL: $${total.toLocaleString()}*`;
-                
-                window.open(`https://wa.me/${zone.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
-                state.cart = [];
-                localStorage.setItem('cg_cart', '[]');
-                updateCartUI();
-                toggleCart();
-                showToast("¡Pedido enviado!");
-            } catch (err) {
-                showToast("Error al guardar pedido");
+                if (data && data.value === pass) {
+                    isAdmin = true;
+                    document.getElementById('admin-pass-input').value = "";
+                    document.getElementById('admin-login').classList.add('hidden');
+                    showAdminView();
+                } else {
+                    alert("Contraseña incorrecta");
+                }
+            } catch (e) {
+                alert("Error al verificar contraseña. Asegúrate de haber corrido el SQL.");
             }
         }
 
-        // ADMIN CONTENT
-        async function setAdminTab(tab) {
-            state.adminTab = tab;
-            document.querySelectorAll('.admin-tab').forEach(t => {
-                t.classList.toggle('border-emerald-500', t.dataset.tab === tab);
-                t.classList.toggle('text-emerald-400', t.dataset.tab === tab);
-                t.classList.toggle('border-transparent', t.dataset.tab !== tab);
-                t.classList.toggle('text-slate-500', t.dataset.tab !== tab);
-            });
-            renderAdminView();
+        function showAdminView() {
+            document.getElementById('shop-view').classList.add('hidden');
+            document.getElementById('admin-view').classList.remove('hidden');
+            switchTab('products');
         }
 
-        async function renderAdminView() {
-            const container = document.getElementById('admin-content');
-            container.innerHTML = '<div class="py-10 text-center animate-spin"><i class="fa-solid fa-spinner text-3xl text-emerald-500"></i></div>';
+        function logoutAdmin() {
+            isAdmin = false;
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('shop-view').classList.remove('hidden');
+        }
+
+        // --- Productos ---
+        async function renderShop() {
+            try {
+                let query = supabaseClient.from('products').select('*').eq('active', true);
+                if (currentFilter !== 'all') {
+                    query = query.eq('category_id', currentFilter);
+                }
+                
+                const { data: products, error } = await query;
+                if (error) throw error;
+
+                const grid = document.getElementById('products-grid');
+                if (!products || products.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500">No hay productos en esta categoría</div>`;
+                    return;
+                }
+
+                grid.innerHTML = products.map(p => `
+                    <div class="glass rounded-2xl overflow-hidden group hover:shadow-2xl hover:shadow-blue-900/20 transition-all duration-300">
+                        <div class="h-48 overflow-hidden bg-slate-800 relative">
+                            <img src="${p.image_url || 'https://via.placeholder.com/300?text=Sin+Imagen'}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/300?text=Error+Carga'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="font-bold text-lg mb-1">${p.name}</h3>
+                            <p class="text-xs text-slate-400 mb-4">${categories.find(c => c.id === p.category_id)?.name || 'Producto'}</p>
+                            <div class="flex justify-between items-center mt-auto">
+                                <span class="text-2xl font-bold text-blue-400">$${p.price}</span>
+                                <button onclick="addToCart('${p.id}')" class="bg-blue-600 p-3 rounded-xl hover:bg-blue-500 transition-colors shadow-lg shadow-blue-900/40">
+                                    <i class="fa-solid fa-plus text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Error render shop:", e);
+            }
+        }
+
+        async function handleUpload(file) {
+            if (!file) return null;
+            try {
+                const extension = file.name.split('.').pop();
+                const fileName = `${Date.now()}.${extension}`;
+                const { data, error } = await supabaseClient.storage.from('images').upload(fileName, file);
+                
+                if (error) throw error;
+                
+                const { data: { publicUrl } } = supabaseClient.storage.from('images').getPublicUrl(fileName);
+                return publicUrl;
+            } catch (e) {
+                console.error("Error upload:", e);
+                alert("Error al subir imagen. ¿Creaste el bucket 'images' como público?");
+                return null;
+            }
+        }
+
+        document.getElementById('product-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-product');
+            const originalText = btn.innerText;
+            btn.innerText = "Guardando...";
+            btn.disabled = true;
 
             try {
-                if (state.adminTab === 'products') {
-                    container.innerHTML = `
-                        <div class="flex justify-between items-center mb-6">
-                            <h4 class="text-xl font-bold">Catálogo</h4>
-                            <button onclick="showProductForm()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm">+ Nuevo</button>
-                        </div>
-                        <div class="overflow-x-auto bg-slate-800 rounded-xl border border-slate-700">
+                const file = document.getElementById('p-file').files[0];
+                let imageUrl = document.getElementById('p-image-url').value.trim();
+
+                if (file) {
+                    const uploadedUrl = await handleUpload(file);
+                    if (uploadedUrl) imageUrl = uploadedUrl;
+                }
+
+                const pData = {
+                    name: document.getElementById('p-name').value,
+                    price: parseFloat(document.getElementById('p-price').value),
+                    category_id: document.getElementById('p-category').value,
+                    image_url: imageUrl || 'https://via.placeholder.com/300?text=Cocina+Gourmet'
+                };
+
+                const { error } = await supabaseClient.from('products').insert([pData]);
+                
+                if (error) throw error;
+
+                closeProductModal();
+                if (isAdmin) switchTab('products');
+                renderShop();
+            } catch (error) {
+                console.error("Error saving product:", error);
+                alert("No se pudo guardar el producto: " + error.message);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        function updateCategorySelects() {
+            const select = document.getElementById('p-category');
+            if (select) {
+                if (categories.length === 0) {
+                    select.innerHTML = `<option value="">Sin categorías</option>`;
+                } else {
+                    select.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                }
+            }
+        }
+
+        function showProductModal() { 
+            document.getElementById('product-modal').classList.remove('hidden'); 
+            updateCategorySelects();
+        }
+        function closeProductModal() { 
+            document.getElementById('product-modal').classList.add('hidden'); 
+            document.getElementById('product-form').reset(); 
+        }
+
+        // --- Tabs Panel Admin ---
+        async function switchTab(tab) {
+            const content = document.getElementById('admin-content');
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('border-blue-500', 'text-blue-400');
+                b.classList.add('border-transparent');
+            });
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.classList.add('border-blue-500', 'text-blue-400');
+            activeBtn.classList.remove('border-transparent');
+
+            content.innerHTML = `<div class="flex justify-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500"></i></div>`;
+
+            try {
+                if (tab === 'products') {
+                    const { data: prods, error } = await supabaseClient.from('products').select(`
+                        id, name, price, image_url, category_id,
+                        categories ( name )
+                    `);
+                    if (error) throw error;
+
+                    content.innerHTML = `
+                        <div class="overflow-x-auto">
                             <table class="w-full text-left">
-                                <thead class="text-xs text-slate-500 uppercase border-b border-slate-700">
-                                    <tr><th class="p-4">Producto</th><th class="p-4">Precio</th><th class="p-4">Acciones</th></tr>
+                                <thead class="text-slate-400 border-b border-slate-800">
+                                    <tr>
+                                        <th class="py-4 px-4 font-semibold">Producto</th>
+                                        <th class="py-4 px-4 font-semibold">Categoría</th>
+                                        <th class="py-4 px-4 font-semibold text-right">Precio</th>
+                                        <th class="py-4 px-4 text-center">Acciones</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    ${state.products.map(p => `
-                                        <tr class="border-b border-slate-700/50">
-                                            <td class="p-4"><div class="flex items-center gap-3"><img src="${p.image_url}" class="w-8 h-8 rounded object-cover"> <span>${p.name}</span></div></td>
-                                            <td class="p-4 font-bold">$${p.price}</td>
-                                            <td class="p-4">
-                                                <button onclick="editProduct('${p.id}')" class="text-blue-400 mr-3">Editar</button>
-                                                <button onclick="deleteRow('products', '${p.id}')" class="text-red-400">X</button>
+                                    ${prods.map(p => `
+                                        <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                                            <td class="py-4 px-4 flex items-center gap-4">
+                                                <img src="${p.image_url}" class="w-12 h-12 rounded-lg object-cover shadow-sm">
+                                                <span class="font-medium">${p.name}</span>
+                                            </td>
+                                            <td class="py-4 px-4 text-slate-400">${p.categories?.name || 'S/C'}</td>
+                                            <td class="py-4 px-4 font-bold text-blue-400 text-right">$${p.price}</td>
+                                            <td class="py-4 px-4 text-center">
+                                                <button class="text-red-400 hover:text-red-300 p-2 transition-colors" onclick="deleteProduct('${p.id}')">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
                             </table>
-                        </div>`;
-                } else if (state.adminTab === 'orders') {
-                    const orders = await sbFetch('orders', 'select=*,zones(name)&order=created_at.desc');
-                    container.innerHTML = `<h4 class="text-xl font-bold mb-6">Pedidos</h4><div class="space-y-4">
-                        ${orders.map(o => `
-                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row justify-between gap-4">
-                                <div>
-                                    <div class="flex gap-2 text-xs mb-1"><span class="text-emerald-400 font-bold">${o.status}</span> • ${new Date(o.created_at).toLocaleDateString()}</div>
-                                    <h5 class="font-bold">${o.customer_name}</h5>
-                                    <p class="text-xs text-slate-400">${o.customer_address} (${o.zones?.name})</p>
+                        </div>
+                    `;
+                } else if (tab === 'settings') {
+                    const { data: zones } = await supabaseClient.from('zones').select('*');
+                    content.innerHTML = `
+                        <div class="grid md:grid-cols-2 gap-10">
+                            <div>
+                                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                                    <i class="fa-solid fa-truck-fast text-blue-400"></i> Gestión de Zonas
+                                </h3>
+                                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 space-y-4">
+                                    <input type="text" id="z-name" class="w-full" placeholder="Nombre (Ej: Maipú Centro)">
+                                    <input type="text" id="z-wa" class="w-full" placeholder="WhatsApp (549...)">
+                                    <button onclick="saveZone()" class="w-full bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-500 transition-all">Agregar Zona</button>
                                 </div>
-                                <div class="flex items-center gap-4">
-                                    <span class="text-xl font-bold text-emerald-400">$${o.total_amount.toLocaleString()}</span>
-                                    <select onchange="updateStatus('${o.id}', this.value)" class="bg-slate-900 text-xs p-2 rounded">
-                                        <option value="pendiente" ${o.status==='pendiente'?'selected':''}>Pendiente</option>
-                                        <option value="entregado" ${o.status==='entregado'?'selected':''}>Entregado</option>
-                                    </select>
+                                <div class="mt-6 space-y-3">
+                                    ${zones.map(z => `
+                                        <div class="flex justify-between items-center bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                                            <div>
+                                                <p class="font-bold">${z.name}</p>
+                                                <p class="text-xs text-slate-400">${z.whatsapp}</p>
+                                            </div>
+                                            <button onclick="deleteZone('${z.id}')" class="text-red-400 hover:text-red-300 p-2">
+                                                <i class="fa-solid fa-xmark text-lg"></i>
+                                            </button>
+                                        </div>
+                                    `).join('')}
                                 </div>
                             </div>
-                        `).join('')}</div>`;
+                        </div>
+                    `;
                 } else {
-                    container.innerHTML = `<div class="grid md:grid-cols-2 gap-6">
-                        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                            <h5 class="font-bold mb-4">Nueva Zona</h5>
-                            <input id="zn-n" placeholder="Nombre" class="w-full bg-slate-900 border border-slate-700 p-2 rounded mb-2">
-                            <input id="zn-w" placeholder="WA (549...)" class="w-full bg-slate-900 border border-slate-700 p-2 rounded mb-4">
-                            <button onclick="saveZone()" class="w-full bg-emerald-600 p-2 rounded font-bold">Agregar Zona</button>
-                            <div class="mt-4 space-y-2">${state.zones.map(z => `<div class="flex justify-between text-sm bg-slate-900 p-2 rounded"><span>${z.name}</span> <button onclick="deleteRow('zones','${z.id}')" class="text-red-400">X</button></div>`).join('')}</div>
-                        </div>
-                        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                            <h5 class="font-bold mb-4">Banco</h5>
-                            <input id="bk-a" value="${state.settings.bank_alias||''}" placeholder="Alias" class="w-full bg-slate-900 border border-slate-700 p-2 rounded mb-2">
-                            <input id="bk-c" value="${state.settings.bank_cbu||''}" placeholder="CBU" class="w-full bg-slate-900 border border-slate-700 p-2 rounded mb-2">
-                            <input id="bk-h" value="${state.settings.bank_holder||''}" placeholder="Titular" class="w-full bg-slate-900 border border-slate-700 p-2 rounded mb-4">
-                            <button onclick="saveBank()" class="w-full bg-emerald-600 p-2 rounded font-bold">Guardar Banco</button>
-                        </div>
-                    </div>`;
+                    content.innerHTML = `<div class="py-20 text-center text-slate-500 italic">Módulo de pedidos en desarrollo...</div>`;
                 }
-            } catch (err) {
-                container.innerHTML = `<div class="text-red-400 p-4">Error cargando sección administrativa.</div>`;
+            } catch (e) {
+                content.innerHTML = `<div class="py-10 text-center text-red-400">Error al cargar datos: ${e.message}</div>`;
             }
         }
 
-        // ADMIN UTILS
-        async function updateStatus(id, val) { await sbAction('orders', 'PATCH', { status: val }, id); showToast("Actualizado"); }
-        async function saveZone() { 
-            const n = document.getElementById('zn-n').value; 
-            const w = document.getElementById('zn-w').value;
-            if(!n || !w) return;
-            await sbAction('zones', 'POST', { name: n, whatsapp: w });
-            await initData(); renderAdminView();
-        }
-        async function saveBank() {
-            const data = { bank_alias: document.getElementById('bk-a').value, bank_cbu: document.getElementById('bk-c').value, bank_holder: document.getElementById('bk-h').value };
-            if(state.settings.id) await sbAction('settings', 'PATCH', data, state.settings.id);
-            else await sbAction('settings', 'POST', data);
-            showToast("Banco guardado");
-            await initData();
-        }
-        async function deleteRow(table, id) { if(confirm("¿Eliminar?")) { await sbAction(table, 'DELETE', null, id); await initData(); renderAdminView(); } }
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg; t.style.opacity = '1'; t.style.transform = 'translate(-50%, 0)';
-            setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, 40px)'; }, 3000);
+        async function saveZone() {
+            const name = document.getElementById('z-name').value.trim();
+            const wa = document.getElementById('z-wa').value.trim();
+            if (!name || !wa) return alert("Completa los datos de la zona");
+            
+            try {
+                await supabaseClient.from('zones').insert([{ name, whatsapp: wa }]);
+                switchTab('settings');
+            } catch (e) {
+                alert("Error al guardar zona.");
+            }
         }
 
-        // FORMULARIOS DE PRODUCTO (NUEVO/EDITAR)
-        function showProductForm(pId = null) {
-            const p = pId ? state.products.find(x => x.id == pId) : {};
-            const overlay = document.createElement('div');
-            overlay.className = 'fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-4';
-            overlay.innerHTML = `<div class="bg-slate-800 w-full max-w-md rounded-2xl border border-slate-700 p-6 animate-fade-in">
-                <h4 class="text-xl font-bold mb-4">${pId?'Editar':'Nuevo'} Producto</h4>
-                <input id="p-n" value="${p.name||''}" placeholder="Nombre" class="w-full bg-slate-900 border border-slate-700 rounded p-3 mb-3">
-                <input id="p-p" type="number" value="${p.price||''}" placeholder="Precio" class="w-full bg-slate-900 border border-slate-700 rounded p-3 mb-3">
-                <select id="p-c" class="w-full bg-slate-900 border border-slate-700 rounded p-3 mb-3">
-                    ${state.categories.map(c => `<option value="${c.id}" ${p.category_id==c.id?'selected':''}>${c.name}</option>`).join('')}
-                </select>
-                <input id="p-i" value="${p.image_url||''}" placeholder="URL Imagen" class="w-full bg-slate-900 border border-slate-700 rounded p-3 mb-4">
-                <div class="flex gap-2">
-                    <button onclick="submitProduct('${p.id||''}')" class="flex-1 bg-emerald-600 py-3 rounded font-bold">Guardar</button>
-                    <button onclick="this.closest('.modal-overlay').remove()" class="flex-1 bg-slate-700 py-3 rounded font-bold">Cerrar</button>
-                </div>
-            </div>`;
-            document.body.appendChild(overlay);
+        async function deleteProduct(id) {
+            if (confirm("¿Estás seguro de eliminar este producto definitivamente?")) {
+                try {
+                    await supabaseClient.from('products').delete().eq('id', id);
+                    switchTab('products');
+                    renderShop();
+                } catch (e) {
+                    alert("No se pudo eliminar.");
+                }
+            }
         }
 
-        async function submitProduct(id) {
-            const data = { name: document.getElementById('p-n').value, price: parseFloat(document.getElementById('p-p').value), category_id: document.getElementById('p-c').value, image_url: document.getElementById('p-i').value, active: true };
-            if(id) await sbAction('products', 'PATCH', data, id);
-            else await sbAction('products', 'POST', data);
-            document.querySelector('.modal-overlay').remove();
-            await initData();
-            renderAdminView();
+        async function deleteZone(id) {
+            if (confirm("¿Eliminar esta zona de envío?")) {
+                try {
+                    await supabaseClient.from('zones').delete().eq('id', id);
+                    switchTab('settings');
+                } catch (e) {
+                    alert("No se pudo eliminar la zona.");
+                }
+            }
         }
 
-        function editProduct(id) { showProductForm(id); }
+        // --- Carrito (Básico) ---
+        function addToCart(id) {
+            alert("¡Producto añadido! (Módulo de checkout próximamente)");
+        }
+
+        function showCart() {
+            alert("El carrito se encuentra en mantenimiento.");
+        }
     </script>
 </body>
 </html>
