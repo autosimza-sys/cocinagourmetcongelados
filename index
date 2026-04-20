@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cocina Gourmet - Prueba simple</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #111827;
+      color: #f9fafb;
+    }
+    .card {
+      background: #1f2937;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #374151;
+      margin-top: 8px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    input {
+      background: #0f172a;
+      color: white;
+    }
+    button {
+      background: #16a34a;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      opacity: 0.95;
+    }
+    .secondary {
+      background: #2563eb;
+    }
+    .muted {
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+    .item {
+      padding: 10px 0;
+      border-bottom: 1px solid #374151;
+    }
+    .ok { color: #86efac; }
+    .err { color: #fca5a5; }
+  </style>
+</head>
+<body>
+  <h1>Cocina Gourmet</h1>
+  <p class="muted">Versión mínima para probar conexión real.</p>
+
+  <div class="card">
+    <h2>1. Conexión</h2>
+    <input id="supabaseUrl" placeholder="Project URL" value="https://peoimydvofprzemjvyzg.supabase.co" />
+    <input id="supabaseKey" placeholder="Clave publicable (sb_publishable...)" />
+    <button class="secondary" onclick="guardarConexion()">Guardar conexión</button>
+    <button onclick="conectar()">Conectar</button>
+    <p id="estadoConexion" class="muted">Sin conectar.</p>
+  </div>
+
+  <div class="card">
+    <h2>2. Agregar producto</h2>
+    <input id="name" placeholder="Nombre del producto" />
+    <input id="price" type="number" placeholder="Precio" />
+    <button onclick="agregarProducto()">Guardar producto</button>
+    <p id="estadoGuardado" class="muted"></p>
+  </div>
+
+  <div class="card">
+    <h2>3. Productos guardados</h2>
+    <button onclick="cargarProductos()">Actualizar lista</button>
+    <div id="lista"></div>
+  </div>
+
+  <script>
+    let supabase = null;
+
+    function guardarConexion() {
+      const url = document.getElementById('supabaseUrl').value.trim();
+      const key = document.getElementById('supabaseKey').value.trim();
+
+      localStorage.setItem('cg_supabase_url', url);
+      localStorage.setItem('cg_supabase_key', key);
+
+      document.getElementById('estadoConexion').innerHTML = '<span class="ok">Datos guardados en este navegador.</span>';
+    }
+
+    function cargarConexionGuardada() {
+      const url = localStorage.getItem('cg_supabase_url') || '';
+      const key = localStorage.getItem('cg_supabase_key') || '';
+
+      if (url) document.getElementById('supabaseUrl').value = url;
+      if (key) document.getElementById('supabaseKey').value = key;
+    }
+
+    async function conectar() {
+      const url = document.getElementById('supabaseUrl').value.trim();
+      const key = document.getElementById('supabaseKey').value.trim();
+      const estado = document.getElementById('estadoConexion');
+
+      try {
+        if (!url || !key) {
+          estado.innerHTML = '<span class="err">Falta URL o clave.</span>';
+          return;
+        }
+
+        supabase = window.supabase.createClient(url, key);
+
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .limit(1);
+
+        if (error) throw error;
+
+        estado.innerHTML = '<span class="ok">Conexión exitosa.</span>';
+        await cargarProductos();
+      } catch (e) {
+        estado.innerHTML = '<span class="err">Error al conectar: ' + e.message + '</span>';
+      }
+    }
+
+    async function agregarProducto() {
+      const estado = document.getElementById('estadoGuardado');
+
+      try {
+        if (!supabase) {
+          estado.innerHTML = '<span class="err">Primero conectate.</span>';
+          return;
+        }
+
+        const name = document.getElementById('name').value.trim();
+        const price = Number(document.getElementById('price').value);
+
+        if (!name || !price) {
+          estado.innerHTML = '<span class="err">Completá nombre y precio.</span>';
+          return;
+        }
+
+        const { error } = await supabase
+          .from('products')
+          .insert([{ name, price }]);
+
+        if (error) throw error;
+
+        document.getElementById('name').value = '';
+        document.getElementById('price').value = '';
+        estado.innerHTML = '<span class="ok">Producto guardado.</span>';
+
+        await cargarProductos();
+      } catch (e) {
+        estado.innerHTML = '<span class="err">No se pudo guardar: ' + e.message + '</span>';
+      }
+    }
+
+    async function cargarProductos() {
+      const lista = document.getElementById('lista');
+
+      try {
+        if (!supabase) {
+          lista.innerHTML = '<p class="muted">Primero conectate.</p>';
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('id', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          lista.innerHTML = '<p class="muted">Todavía no hay productos.</p>';
+          return;
+        }
+
+        lista.innerHTML = data.map(p => `
+          <div class="item">
+            <strong>${p.name}</strong><br>
+            $ ${Number(p.price).toLocaleString('es-AR')}
+          </div>
+        `).join('');
+      } catch (e) {
+        lista.innerHTML = '<p class="err">Error al cargar: ' + e.message + '</p>';
+      }
+    }
+
+    cargarConexionGuardada();
+  </script>
+</body>
+</html>
