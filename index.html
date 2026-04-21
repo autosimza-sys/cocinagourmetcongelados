@@ -102,9 +102,12 @@
             <div id="checkout-form" class="hidden space-y-3 pb-4">
                 <input type="text" id="cust-name" placeholder="Tu Nombre">
                 <input type="text" id="cust-address" placeholder="Dirección de entrega">
-                <select id="cust-zone">
-                    <option value="">Selecciona Zona de Envío</option>
-                </select>
+                <div class="space-y-1">
+                    <select id="cust-zone" onchange="calculateFinalTotal()">
+                        <option value="">Selecciona Zona de Envío</option>
+                    </select>
+                    <div id="shipping-notice" class="hidden px-3 text-xs text-emerald-400 font-bold"></div>
+                </div>
                 <select id="cust-payment" onchange="updatePaymentUI()">
                     <option value="efectivo">Efectivo al recibir</option>
                     <option value="transferencia">Transferencia Bancaria</option>
@@ -115,9 +118,19 @@
                 </div>
             </div>
 
-            <div class="flex justify-between items-center text-xl font-bold">
-                <span>Total:</span>
-                <span id="cart-total" class="text-emerald-400">$0</span>
+            <div class="space-y-1 border-t border-white/5 pt-4">
+                <div class="flex justify-between items-center text-sm text-slate-400">
+                    <span>Subtotal:</span>
+                    <span id="cart-subtotal">$0</span>
+                </div>
+                <div class="flex justify-between items-center text-sm text-slate-400">
+                    <span>Envío:</span>
+                    <span id="cart-shipping-cost">$0</span>
+                </div>
+                <div class="flex justify-between items-center text-xl font-bold mt-2">
+                    <span>Total:</span>
+                    <span id="cart-total" class="text-emerald-400">$0</span>
+                </div>
             </div>
 
             <button id="btn-next" onclick="showCheckout()" class="w-full btn-primary py-4 rounded-2xl font-bold text-white">
@@ -178,18 +191,18 @@
                             <button onclick="saveDbConnection()" class="w-full bg-blue-600/20 text-blue-400 py-2 rounded-lg text-xs font-bold hover:bg-blue-600/30 transition-colors">
                                 Actualizar Conexión
                             </button>
-                            <p class="text-[10px] text-slate-500 italic text-center">Nota: Los cambios recargarán la aplicación.</p>
                         </div>
                     </div>
 
                     <!-- Zonas de Envío -->
                     <div class="glass p-6 rounded-2xl">
-                        <h3 class="font-bold text-emerald-400 mb-4"><i class="fa-solid fa-truck-fast mr-2"></i>Zonas de Envío</h3>
-                        <div class="space-y-2 mb-4 max-h-[200px] overflow-y-auto pr-2" id="admin-zones"></div>
-                        <div class="space-y-2">
+                        <h3 class="font-bold text-emerald-400 mb-4"><i class="fa-solid fa-truck-fast mr-2"></i>Zonas y Costos de Envío</h3>
+                        <div class="space-y-2 mb-4 max-h-[300px] overflow-y-auto pr-2" id="admin-zones"></div>
+                        <div class="space-y-2 pt-2 border-t border-white/5">
                             <input type="text" id="new-zone-name" placeholder="Nombre Zona" class="text-sm">
                             <input type="text" id="new-zone-wa" placeholder="WhatsApp (Ej: 54911...)" class="text-sm">
-                            <button onclick="addZone()" class="w-full bg-slate-700 py-2 rounded-lg text-xs font-bold hover:bg-slate-600">Añadir Zona</button>
+                            <input type="number" id="new-zone-cost" placeholder="Costo Envío ($)" class="text-sm">
+                            <button onclick="addZone()" class="w-full bg-emerald-600/20 text-emerald-400 py-2 rounded-lg text-xs font-bold hover:bg-emerald-600/30">Añadir Zona</button>
                         </div>
                     </div>
 
@@ -200,15 +213,6 @@
                             <input type="text" id="bank-alias" placeholder="Alias Banco" class="text-sm">
                             <input type="text" id="bank-cbu" placeholder="CBU/CVU" class="text-sm">
                             <button onclick="saveBank()" class="w-full bg-emerald-600/20 text-emerald-400 py-2 rounded-lg text-xs font-bold hover:bg-emerald-600/30">Guardar Banco</button>
-                        </div>
-                    </div>
-
-                    <!-- Seguridad -->
-                    <div class="glass p-6 rounded-2xl border border-rose-500/20">
-                        <h3 class="font-bold text-rose-400 mb-4"><i class="fa-solid fa-key mr-2"></i>Acceso Admin</h3>
-                        <div class="space-y-2">
-                            <input type="password" id="new-admin-password" placeholder="Nueva Clave Admin" class="text-sm">
-                            <button onclick="updateAdminPass()" class="w-full bg-rose-600/20 text-rose-400 py-2 rounded-lg text-xs font-bold hover:bg-rose-600/30">Cambiar Clave</button>
                         </div>
                     </div>
                 </div>
@@ -246,13 +250,11 @@
     </div>
 
     <script>
-        // Claves de LocalStorage
         const DB_CONFIG_KEY = 'cg_supabase_config_v1';
         const ADMIN_PASS_KEY = 'cg_admin_pass_v2';
         const ATTEMPTS_KEY = 'cg_admin_attempts_v2';
         const LOCKOUT_KEY = 'cg_admin_lockout_v2';
 
-        // Configuración Inicial / Fallback
         const INITIAL_URL = "https://peoimydvofprzemjvyzg.supabase.co";
         const INITIAL_KEY = "sb_publishable_pq5tsxdZqiNJxiQg7R6YpQ_vshWWv7H";
 
@@ -270,7 +272,6 @@
             const url = savedConfig?.url || INITIAL_URL;
             const key = savedConfig?.key || INITIAL_KEY;
             
-            // Llenar inputs de admin con la config actual
             document.getElementById('db-url').value = url;
             document.getElementById('db-key').value = key;
 
@@ -280,29 +281,24 @@
         async function initSupabase(url, key) {
             try {
                 sb = supabase.createClient(url, key);
-                // Test de conexión rápido
                 const { error } = await sb.from('products').select('id').limit(1);
                 updateDbStatus(!error);
                 loadAllData();
             } catch (e) {
                 updateDbStatus(false);
-                console.error("Error al conectar con Supabase:", e);
             }
         }
 
         function updateDbStatus(isOk) {
             const dot = document.getElementById('db-status-dot');
             dot.className = `w-3 h-3 rounded-full ${isOk ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`;
-            dot.title = isOk ? 'Conectado a Supabase' : 'Error de Conexión';
         }
 
         function saveDbConnection() {
             const url = document.getElementById('db-url').value.trim();
             const key = document.getElementById('db-key').value.trim();
             if(!url || !key) return alert("URL y Key son requeridas");
-            
             localStorage.setItem(DB_CONFIG_KEY, JSON.stringify({ url, key }));
-            alert("Configuración guardada. Recargando...");
             window.location.reload();
         }
 
@@ -325,11 +321,10 @@
                 updateCheckoutUI();
                 loadCart(); 
             } catch (e) {
-                console.warn("Error al cargar datos remotos.");
+                console.error("Error cargando datos:", e);
             }
         }
 
-        // --- MODAL DE AGREGADO ---
         function showAddedModal(productName) {
             document.getElementById('added-product-name').innerText = productName;
             document.getElementById('modal-added-confirm').classList.remove('hidden');
@@ -339,7 +334,6 @@
             document.getElementById('modal-added-confirm').classList.add('hidden');
         }
 
-        // --- SUBIDA DE IMAGEN STORAGE ---
         async function uploadProductImage(file) {
             const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -350,7 +344,6 @@
             return publicUrl;
         }
 
-        // --- SEGURIDAD ---
         function checkAdminAccess() {
             if (isViewAdminUnlocked) { showView('admin'); return; }
             const lockout = localStorage.getItem(LOCKOUT_KEY);
@@ -376,11 +369,10 @@
                 attempts++;
                 localStorage.setItem(ATTEMPTS_KEY, attempts);
                 if (attempts >= 3) {
-                    localStorage.setItem(LOCKOUT_KEY, Date.now() + 1800000); // 30m
-                    alert("Bloqueado por 30 minutos por demasiados intentos.");
+                    localStorage.setItem(LOCKOUT_KEY, Date.now() + 1800000);
                     closeAdminLogin();
                 } else {
-                    document.getElementById('login-error-msg').innerText = `Contraseña incorrecta. Intento ${attempts}/3`;
+                    document.getElementById('login-error-msg').innerText = `Incorrecto (${attempts}/3)`;
                     document.getElementById('login-error-msg').classList.remove('hidden');
                 }
             }
@@ -388,15 +380,7 @@
 
         function closeAdminLogin() { document.getElementById('modal-admin-login').classList.add('hidden'); }
         function logoutAdmin() { isViewAdminUnlocked = false; showView('shop'); }
-        function updateAdminPass() {
-            const val = document.getElementById('new-admin-password').value;
-            if(val.length < 4) return alert("La clave debe tener al menos 4 caracteres");
-            localStorage.setItem(ADMIN_PASS_KEY, val);
-            alert("Contraseña de administrador actualizada correctamente");
-            document.getElementById('new-admin-password').value = "";
-        }
 
-        // --- TIENDA Y CARRITO ---
         function renderShop() {
             const catCont = document.getElementById('cat-list');
             catCont.innerHTML = `<button onclick="setFilter('all')" class="px-5 py-2 rounded-full font-bold whitespace-nowrap ${currentCat === 'all' ? 'bg-emerald-600' : 'bg-slate-800 text-slate-400'}">Todos</button>`;
@@ -408,20 +392,16 @@
             let filtered = products;
             if(currentCat !== 'all') filtered = products.filter(p => p.category_id === currentCat);
             
-            if(filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500">No hay productos en esta categoría.</div>`;
-            } else {
-                grid.innerHTML = filtered.map(p => `
-                    <div class="glass p-4 rounded-3xl flex flex-col group">
-                        <div class="img-container mb-4">
-                            <img src="${p.image_url || 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=400'}" onerror="this.src='https://via.placeholder.com/400'">
-                        </div>
-                        <h3 class="font-bold mb-1">${p.name}</h3>
-                        <p class="text-emerald-400 font-bold text-xl mb-4">$${p.price.toLocaleString()}</p>
-                        <button onclick="addToCart('${p.id}')" class="btn-primary py-3 rounded-2xl font-bold text-white">Agregar al carrito</button>
+            grid.innerHTML = filtered.map(p => `
+                <div class="glass p-4 rounded-3xl flex flex-col group">
+                    <div class="img-container mb-4">
+                        <img src="${p.image_url || 'https://via.placeholder.com/400'}" onerror="this.src='https://via.placeholder.com/400'">
                     </div>
-                `).join('');
-            }
+                    <h3 class="font-bold mb-1">${p.name}</h3>
+                    <p class="text-emerald-400 font-bold text-xl mb-4">$${p.price.toLocaleString()}</p>
+                    <button onclick="addToCart('${p.id}')" class="btn-primary py-3 rounded-2xl font-bold text-white">Agregar al carrito</button>
+                </div>
+            `).join('');
         }
 
         function setFilter(id) { currentCat = id; renderShop(); }
@@ -437,10 +417,8 @@
         }
 
         function saveCart() { 
-            try {
-                const minimalCart = cart.map(i => ({ id: i.id, qty: i.qty }));
-                localStorage.setItem('cg_cart_v3', JSON.stringify(minimalCart)); 
-            } catch (e) { console.error("Error al guardar carrito:", e); }
+            const minimalCart = cart.map(i => ({ id: i.id, qty: i.qty }));
+            localStorage.setItem('cg_cart_v3', JSON.stringify(minimalCart)); 
         }
 
         function loadCart() { 
@@ -449,8 +427,8 @@
                 try {
                     const minimalCart = JSON.parse(saved);
                     cart = minimalCart.map(m => {
-                        const originalProduct = products.find(p => p.id === m.id);
-                        return originalProduct ? { ...originalProduct, qty: m.qty } : null;
+                        const op = products.find(p => p.id === m.id);
+                        return op ? { ...op, qty: m.qty } : null;
                     }).filter(Boolean);
                 } catch(e) { cart = []; }
             }
@@ -459,27 +437,47 @@
 
         function updateCartUI() {
             const count = cart.reduce((a, b) => a + b.qty, 0);
-            const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
             document.getElementById('cart-count').innerText = count;
             document.getElementById('cart-count').classList.toggle('hidden', count === 0);
-            document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
             
             const cont = document.getElementById('cart-items');
-            cont.innerHTML = cart.length === 0 ? `<div class="text-center py-20 opacity-40"><i class="fa-solid fa-basket-shopping text-4xl mb-2"></i><p>Tu carrito está vacío</p></div>` : 
+            cont.innerHTML = cart.length === 0 ? `<div class="text-center py-20 opacity-40"><p>Tu carrito está vacío</p></div>` : 
                 cart.map((i, idx) => `
                     <div class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-xl border border-white/5">
-                        <img src="${i.image_url}" class="w-12 h-12 object-cover rounded-lg bg-slate-700">
+                        <img src="${i.image_url}" class="w-12 h-12 object-cover rounded-lg">
                         <div class="flex-1">
                             <div class="font-bold text-sm leading-tight">${i.name}</div>
                             <div class="text-xs text-emerald-400">$${(i.price * i.qty).toLocaleString()}</div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="modQty(${idx}, -1)" class="w-7 h-7 bg-slate-700 hover:bg-slate-600 rounded flex items-center justify-center transition-colors"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                            <span class="w-5 text-center font-bold">${i.qty}</span>
-                            <button onclick="modQty(${idx}, 1)" class="w-7 h-7 bg-slate-700 hover:bg-slate-600 rounded flex items-center justify-center transition-colors"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            <button onclick="modQty(${idx}, -1)" class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                            <span class="w-4 text-center font-bold text-xs">${i.qty}</span>
+                            <button onclick="modQty(${idx}, 1)" class="w-6 h-6 bg-slate-700 rounded flex items-center justify-center"><i class="fa-solid fa-plus text-[10px]"></i></button>
                         </div>
                     </div>
                 `).join('');
+            
+            calculateFinalTotal();
+        }
+
+        function calculateFinalTotal() {
+            const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+            const zoneId = document.getElementById('cust-zone').value;
+            const zone = zones.find(z => z.id === zoneId);
+            const shipping = zone ? parseFloat(zone.shipping_cost || 0) : 0;
+            const total = subtotal + shipping;
+
+            document.getElementById('cart-subtotal').innerText = `$${subtotal.toLocaleString()}`;
+            document.getElementById('cart-shipping-cost').innerText = `$${shipping.toLocaleString()}`;
+            document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
+
+            const notice = document.getElementById('shipping-notice');
+            if (zone) {
+                notice.innerText = `Costo de envío para ${zone.name}: $${shipping.toLocaleString()}`;
+                notice.classList.remove('hidden');
+            } else {
+                notice.classList.add('hidden');
+            }
         }
 
         function modQty(idx, d) {
@@ -488,13 +486,10 @@
             saveCart(); updateCartUI();
         }
 
-        function toggleCart() { 
-            const sidebar = document.getElementById('cart-sidebar');
-            sidebar.classList.toggle('open');
-        }
+        function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('open'); }
 
         function showCheckout() {
-            if(cart.length === 0) return alert("Agrega productos antes de continuar");
+            if(cart.length === 0) return alert("Carrito vacío");
             document.getElementById('checkout-form').classList.remove('hidden');
             document.getElementById('btn-next').classList.add('hidden');
             document.getElementById('btn-submit').classList.remove('hidden');
@@ -503,10 +498,6 @@
         function updateCheckoutUI() {
             const sel = document.getElementById('cust-zone');
             sel.innerHTML = `<option value="">Selecciona Zona de Envío</option>` + zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
-            
-            document.getElementById('bank-alias').value = bankSettings.bank_alias || '';
-            document.getElementById('bank-cbu').value = bankSettings.bank_cbu || '';
-            
             document.getElementById('bank-info-txt').innerHTML = `Alias: <b>${bankSettings.bank_alias || '-'}</b><br>CBU: <b>${bankSettings.bank_cbu || '-'}</b>`;
         }
 
@@ -517,115 +508,90 @@
 
         async function processOrder() {
             const name = document.getElementById('cust-name').value.trim();
-            const address = document.getElementById('cust-address').value.trim();
-            const zoneId = document.getElementById('cust-zone').value;
-            const payment = document.getElementById('cust-payment').value;
+            const addr = document.getElementById('cust-address').value.trim();
+            const zId = document.getElementById('cust-zone').value;
+            const pay = document.getElementById('cust-payment').value;
 
-            if(!name || !address || !zoneId) return alert("Por favor completa los datos de entrega");
+            if(!name || !addr || !zId) return alert("Completa los datos");
 
-            const zone = zones.find(z => z.id === zoneId);
-            const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+            const zone = zones.find(z => z.id === zId);
+            const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+            const shipping = parseFloat(zone.shipping_cost || 0);
+            const total = subtotal + shipping;
 
-            let texto = `*NUEVO PEDIDO - COCINA GOURMET*\n`;
-            texto += `--------------------------\n`;
-            texto += `👤 *Cliente:* ${name}\n`;
-            texto += `📍 *Dirección:* ${address}\n`;
-            texto += `🏙️ *Zona:* ${zone.name}\n`;
-            texto += `💳 *Pago:* ${payment.toUpperCase()}\n`;
-            texto += `--------------------------\n`;
-            cart.forEach(i => texto += `• ${i.qty}x ${i.name} ($${(i.price * i.qty).toLocaleString()})\n`);
-            texto += `--------------------------\n`;
-            texto += `💰 *TOTAL A PAGAR: $${total.toLocaleString()}*`;
+            let t = `*NUEVO PEDIDO - COCINA GOURMET*\n`;
+            t += `--------------------------\n`;
+            t += `👤 *Cliente:* ${name}\n`;
+            t += `📍 *Entrega:* ${addr}\n`;
+            t += `🏙️ *Zona:* ${zone.name}\n`;
+            t += `💳 *Pago:* ${pay.toUpperCase()}\n`;
+            t += `--------------------------\n`;
+            cart.forEach(i => t += `• ${i.qty}x ${i.name} ($${(i.price * i.qty).toLocaleString()})\n`);
+            t += `--------------------------\n`;
+            t += `📦 Subtotal: $${subtotal.toLocaleString()}\n`;
+            t += `🚚 Envío: $${shipping.toLocaleString()}\n`;
+            t += `💰 *TOTAL: $${total.toLocaleString()}*`;
 
-            const phone = zone && zone.whatsapp ? zone.whatsapp : '5491111111111';
-            const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(texto)}`;
+            const waUrl = `https://wa.me/${zone.whatsapp || '54911'}?text=${encodeURIComponent(t)}`;
 
             try {
-                if (sb) {
-                    await sb.from('orders').insert([{
-                        customer_name: name, 
-                        customer_address: address, 
-                        zone_id: zoneId, 
-                        total_amount: total
-                    }]);
-                }
-            } catch (e) { console.warn("Error al registrar orden en DB."); }
+                await sb.from('orders').insert([{ customer_name: name, customer_address: addr, zone_id: zId, total_amount: total }]);
+            } catch (e) {}
 
-            cart = [];
-            saveCart();
-            updateCartUI();
-            toggleCart();
-            setTimeout(() => { window.open(waUrl, '_blank'); }, 100);
+            cart = []; saveCart(); updateCartUI(); toggleCart();
+            window.open(waUrl, '_blank');
         }
 
-        // --- FUNCIONES ADMIN ---
+        // --- ADMIN ---
         function renderAdmin() {
-            document.getElementById('admin-products').innerHTML = products.length === 0 ? '<p class="text-center py-10 opacity-30">No hay productos cargados</p>' : products.map(p => `
-                <div class="flex justify-between bg-slate-800/40 p-3 rounded-xl items-center border border-white/5 hover:border-white/10 transition-colors">
+            document.getElementById('admin-products').innerHTML = products.map(p => `
+                <div class="flex justify-between bg-slate-800/40 p-3 rounded-xl items-center border border-white/5">
                     <div class="flex items-center gap-3">
-                        <img src="${p.image_url}" class="w-10 h-10 object-cover rounded-lg bg-slate-700">
+                        <img src="${p.image_url}" class="w-10 h-10 object-cover rounded-lg">
                         <div>
                             <div class="font-bold text-sm">${p.name}</div>
                             <div class="text-xs text-slate-400">$${p.price.toLocaleString()}</div>
                         </div>
                     </div>
-                    <button onclick="deleteProduct('${p.id}')" class="text-rose-400 p-2 hover:bg-rose-500/10 rounded-lg transition-colors"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="deleteProduct('${p.id}')" class="text-rose-400 p-2"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
 
-            document.getElementById('admin-zones').innerHTML = zones.length === 0 ? '<p class="text-xs opacity-30 py-2">No hay zonas</p>' : zones.map(z => `
-                <div class="flex justify-between bg-slate-800/40 p-2 rounded-lg text-sm border border-white/5 items-center">
-                    <div class="truncate pr-2">
-                        <div class="font-bold text-[11px]">${z.name}</div>
-                        <div class="text-[9px] text-slate-500">${z.whatsapp}</div>
+            document.getElementById('admin-zones').innerHTML = zones.map(z => `
+                <div class="flex justify-between bg-slate-800/40 p-3 rounded-xl text-sm border border-white/5 items-center">
+                    <div class="flex-1">
+                        <div class="font-bold">${z.name}</div>
+                        <div class="text-[10px] text-slate-400">WhatsApp: ${z.whatsapp}</div>
+                        <div class="text-[10px] text-emerald-400 font-bold">Envío: $${z.shipping_cost || 0}</div>
                     </div>
-                    <button onclick="deleteZone('${z.id}')" class="text-rose-400 p-1 hover:text-rose-300"><i class="fa-solid fa-xmark"></i></button>
+                    <button onclick="deleteZone('${z.id}')" class="text-rose-400 p-2"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
             `).join('');
         }
 
         async function addZone() {
-            const n = document.getElementById('new-zone-name').value.trim();
-            const w = document.getElementById('new-zone-wa').value.trim();
-            if(!n || !w) return alert("Completa nombre y WhatsApp de la zona");
-            await sb.from('zones').insert([{ name: n, whatsapp: w }]);
-            document.getElementById('new-zone-name').value = "";
-            document.getElementById('new-zone-wa').value = "";
+            const n = document.getElementById('new-zone-name').value;
+            const w = document.getElementById('new-zone-wa').value;
+            const c = document.getElementById('new-zone-cost').value || 0;
+            if(!n || !w) return alert("Nombre y WhatsApp obligatorios");
+            await sb.from('zones').insert([{ name: n, whatsapp: w, shipping_cost: parseFloat(c) }]);
             loadAllData();
         }
 
-        async function deleteZone(id) { 
-            if(confirm("¿Eliminar zona?")) {
-                await sb.from('zones').delete().eq('id', id); 
-                loadAllData(); 
-            }
-        }
-        
-        async function deleteProduct(id) { 
-            if(confirm("¿Estás seguro de eliminar este producto?")) { 
-                await sb.from('products').delete().eq('id', id); 
-                loadAllData(); 
-            } 
-        }
+        async function deleteZone(id) { if(confirm("¿Eliminar?")) { await sb.from('zones').delete().eq('id', id); loadAllData(); } }
+        async function deleteProduct(id) { if(confirm("¿Eliminar?")) { await sb.from('products').delete().eq('id', id); loadAllData(); } }
         
         async function saveBank() {
-            const d = { 
-                bank_alias: document.getElementById('bank-alias').value, 
-                bank_cbu: document.getElementById('bank-cbu').value 
-            };
-            if(bankSettings.id) {
-                await sb.from('settings').update(d).eq('id', bankSettings.id);
-            } else {
-                await sb.from('settings').insert([d]);
-            }
-            alert("Datos bancarios actualizados");
+            const d = { bank_alias: document.getElementById('bank-alias').value, bank_cbu: document.getElementById('bank-cbu').value };
+            if(bankSettings.id) await sb.from('settings').update(d).eq('id', bankSettings.id);
+            else await sb.from('settings').insert([d]);
+            alert("Guardado");
             loadAllData();
         }
 
         function showView(v) {
             document.getElementById('view-shop').classList.toggle('hidden', v !== 'shop');
             document.getElementById('view-admin').classList.toggle('hidden', v !== 'admin');
-            if(v === 'shop') window.scrollTo(0, 0);
         }
 
         function openProductModal() {
@@ -636,42 +602,17 @@
 
         document.getElementById('form-product').onsubmit = async (e) => {
             e.preventDefault();
-            const btnText = document.getElementById('p-btn-text');
-            const btnLoader = document.getElementById('p-btn-loader');
-            const submitBtn = document.getElementById('p-submit-btn');
+            const file = document.getElementById('p-file').files[0];
+            let imageUrl = document.getElementById('p-img').value || 'https://via.placeholder.com/400';
+            if (file) imageUrl = await uploadProductImage(file);
 
-            try {
-                btnText.classList.add('hidden');
-                btnLoader.classList.remove('hidden');
-                submitBtn.disabled = true;
-
-                const file = document.getElementById('p-file').files[0];
-                let imageUrl = document.getElementById('p-img').value || 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=400';
-
-                if (file) {
-                    imageUrl = await uploadProductImage(file);
-                }
-
-                const data = {
-                    name: document.getElementById('p-name').value,
-                    price: parseFloat(document.getElementById('p-price').value),
-                    category_id: document.getElementById('p-cat').value,
-                    image_url: imageUrl
-                };
-
-                const { error } = await sb.from('products').insert([data]);
-                if (error) throw error;
-
-                closeProductModal();
-                loadAllData();
-                e.target.reset();
-            } catch (err) {
-                alert("Error al guardar: " + err.message);
-            } finally {
-                btnText.classList.remove('hidden');
-                btnLoader.classList.add('hidden');
-                submitBtn.disabled = false;
-            }
+            await sb.from('products').insert([{
+                name: document.getElementById('p-name').value,
+                price: parseFloat(document.getElementById('p-price').value),
+                category_id: document.getElementById('p-cat').value,
+                image_url: imageUrl
+            }]);
+            closeProductModal(); loadAllData(); e.target.reset();
         };
     </script>
 </body>
