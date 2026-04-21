@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cocina Gourmet | Tienda de Congelados</title>
+    <title>Cocina Gourmet | Pedidos Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -19,11 +19,6 @@
         .img-container { position: relative; overflow: hidden; padding-top: 80%; border-radius: 1rem; background: #1e293b; }
         .img-container img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-
         .cart-sidebar { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .cart-sidebar.open { transform: translateX(0); }
     </style>
@@ -40,74 +35,66 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <button onclick="showView('shop')" class="p-2 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-house"></i></button>
-            <button onclick="checkAdminAccess()" class="p-2 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-user-gear"></i></button>
+            <button onclick="showView('shop')" class="p-2 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-house text-xl"></i></button>
+            <button onclick="checkAdminAccess()" class="p-2 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-user-gear text-xl"></i></button>
             <button onclick="toggleCart()" class="relative bg-slate-800 p-3 rounded-xl hover:bg-slate-700 transition-all">
-                <i class="fa-solid fa-basket-shopping text-emerald-400"></i>
+                <i class="fa-solid fa-basket-shopping text-emerald-400 text-xl"></i>
                 <span id="cart-count" class="absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
             </button>
         </div>
     </nav>
 
-    <!-- Modal de Login Administrador -->
+    <!-- Modal Login Administrador -->
     <div id="modal-admin-login" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
         <div class="glass p-8 rounded-3xl w-full max-w-sm border border-white/10 text-center">
             <div class="w-16 h-16 bg-emerald-600/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl">
                 <i class="fa-solid fa-lock"></i>
             </div>
-            <h3 class="text-xl font-bold mb-2">Acceso Restringido</h3>
-            <p class="text-slate-400 text-sm mb-6">Ingresa la contraseña maestra para continuar.</p>
-            
+            <h3 class="text-xl font-bold mb-2">Acceso Admin</h3>
             <div id="login-error-msg" class="hidden mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-400"></div>
-            
-            <input type="password" id="admin-password" placeholder="Contraseña" class="mb-4 text-center tracking-[0.5em]">
-            
-            <div class="flex gap-3">
+            <input type="password" id="admin-password" placeholder="Contraseña" class="mb-4 text-center tracking-widest">
+            <div class="flex gap-2">
                 <button onclick="attemptAdminLogin()" class="flex-1 btn-primary py-3 rounded-xl font-bold text-white">Entrar</button>
-                <button onclick="closeAdminLogin()" class="px-4 bg-slate-700 py-3 rounded-xl font-bold">Cancelar</button>
+                <button onclick="closeAdminLogin()" class="px-4 bg-slate-700 py-3 rounded-xl font-bold">Cerrar</button>
             </div>
         </div>
     </div>
 
     <!-- Sidebar Carrito -->
     <div id="cart-sidebar" class="cart-sidebar fixed right-0 top-0 h-full w-full max-w-md bg-slate-900 z-50 shadow-2xl flex flex-col border-l border-white/5">
-        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-slate-800/20">
-            <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-emerald-500"></i> Mi Pedido</h2>
-            <button onclick="toggleCart()" class="text-slate-400 hover:text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        <div class="p-6 border-b border-white/5 flex justify-between items-center">
+            <h2 class="text-xl font-bold"><i class="fa-solid fa-cart-shopping text-emerald-500 mr-2"></i>Mi Pedido</h2>
+            <button onclick="toggleCart()" class="text-slate-400 text-2xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
-            <!-- Items dinámicos -->
-        </div>
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
 
-        <div id="checkout-section" class="p-6 bg-slate-800/40 border-t border-white/10 space-y-4">
+        <div class="p-6 bg-slate-800/40 border-t border-white/10 space-y-4">
             <div id="checkout-form" class="hidden space-y-3 pb-4">
-                <input type="text" id="cust-name" placeholder="Tu Nombre Completo">
-                <input type="tel" id="cust-phone" placeholder="WhatsApp (Ej: 54911...)">
+                <input type="text" id="cust-name" placeholder="Tu Nombre">
                 <input type="text" id="cust-address" placeholder="Dirección de entrega">
-                <select id="cust-zone" class="cursor-pointer">
-                    <option value="">Cargando zonas...</option>
+                <select id="cust-zone">
+                    <option value="">Selecciona Zona de Envío</option>
                 </select>
-                <select id="cust-payment" onchange="updatePaymentUI()" class="cursor-pointer">
+                <select id="cust-payment" onchange="updatePaymentUI()">
                     <option value="efectivo">Efectivo al recibir</option>
                     <option value="transferencia">Transferencia Bancaria</option>
                 </select>
-                <div id="bank-data" class="hidden p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-400 leading-relaxed">
-                    <p class="font-bold mb-1">Datos de Transferencia:</p>
+                <div id="bank-data" class="hidden p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-400">
+                    <p class="font-bold mb-1">Datos para Transferencia:</p>
                     <div id="bank-info-txt"></div>
                 </div>
-                <textarea id="cust-notes" placeholder="Notas adicionales (opcional)" rows="2"></textarea>
             </div>
 
-            <div class="flex justify-between items-center text-xl font-bold px-2">
+            <div class="flex justify-between items-center text-xl font-bold">
                 <span>Total:</span>
-                <span id="cart-total" class="text-emerald-400">$0.00</span>
+                <span id="cart-total" class="text-emerald-400">$0</span>
             </div>
 
-            <button id="btn-next" onclick="showCheckout()" class="w-full btn-primary py-4 rounded-2xl font-bold text-lg text-white">
+            <button id="btn-next" onclick="showCheckout()" class="w-full btn-primary py-4 rounded-2xl font-bold text-white">
                 Siguiente: Datos de Envío
             </button>
-            <button id="btn-submit" onclick="processOrder()" class="hidden w-full btn-primary py-4 rounded-2xl font-bold text-lg text-white flex items-center justify-center gap-3">
+            <button id="btn-submit" onclick="processOrder()" class="hidden w-full btn-primary py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2">
                 <i class="fa-brands fa-whatsapp text-2xl"></i> CONFIRMAR PEDIDO
             </button>
         </div>
@@ -116,66 +103,48 @@
     <main class="max-w-7xl mx-auto px-4 py-8">
         <!-- VISTA TIENDA -->
         <section id="view-shop">
-            <div class="mb-8 space-y-4">
-                <h2 class="text-3xl font-extrabold">Catálogo Gourmet</h2>
-                <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar" id="cat-list"></div>
+            <div class="mb-8">
+                <h2 class="text-3xl font-extrabold mb-4">Catálogo Gourmet</h2>
+                <div class="flex gap-2 overflow-x-auto pb-4" id="cat-list"></div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="products-grid">
-                <!-- Productos dinámicos -->
-            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="products-grid"></div>
         </section>
 
         <!-- VISTA ADMIN -->
         <section id="view-admin" class="hidden">
             <div class="flex justify-between items-center mb-8">
-                <div class="flex items-center gap-4">
-                    <h2 class="text-2xl font-bold">Administrador</h2>
-                    <button onclick="logoutAdmin()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-lg text-slate-400">Cerrar Sesión</button>
-                </div>
-                <span id="conn-status" class="text-[10px] bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full font-bold">CONECTADO</span>
+                <h2 class="text-2xl font-bold">Administrador</h2>
+                <button onclick="logoutAdmin()" class="bg-slate-800 px-4 py-2 rounded-lg text-xs">Cerrar Sesión</button>
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 space-y-6">
                     <div class="glass p-6 rounded-2xl">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="font-bold text-emerald-400 uppercase text-xs tracking-widest">Productos</h3>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-emerald-400">Productos</h3>
                             <button onclick="openProductModal()" class="bg-emerald-600 px-4 py-2 rounded-lg text-xs font-bold text-white">+ Nuevo</button>
                         </div>
-                        <div id="admin-products" class="space-y-3"></div>
+                        <div id="admin-products" class="space-y-2"></div>
                     </div>
                 </div>
                 <div class="space-y-6">
                     <div class="glass p-6 rounded-2xl">
-                        <h3 class="font-bold text-blue-400 uppercase text-xs tracking-widest mb-6">Zonas de Envío</h3>
-                        <div class="space-y-3" id="admin-zones"></div>
-                        <div class="mt-4 pt-4 border-t border-white/5 space-y-2">
-                            <input type="text" id="new-zone-name" placeholder="Nombre (Ej: CABA)" class="text-xs">
-                            <input type="text" id="new-zone-wa" placeholder="WA (549...)" class="text-xs">
-                            <button onclick="addZone()" class="w-full bg-slate-700 py-2 rounded-lg text-xs font-bold text-white">Añadir Zona</button>
-                        </div>
+                        <h3 class="font-bold text-blue-400 mb-4">Zonas de Envío</h3>
+                        <div class="space-y-2 mb-4" id="admin-zones"></div>
+                        <input type="text" id="new-zone-name" placeholder="Nombre Zona" class="text-sm mb-2">
+                        <input type="text" id="new-zone-wa" placeholder="WhatsApp (Ej: 54911...)" class="text-sm mb-2">
+                        <button onclick="addZone()" class="w-full bg-slate-700 py-2 rounded-lg text-xs font-bold">Añadir Zona</button>
                     </div>
                     <div class="glass p-6 rounded-2xl">
-                        <h3 class="font-bold text-orange-400 uppercase text-xs tracking-widest mb-6">Datos Banco</h3>
-                        <div class="space-y-3">
-                            <input type="text" id="bank-alias" placeholder="Alias">
-                            <input type="text" id="bank-cbu" placeholder="CBU/CVU">
-                            <input type="text" id="bank-holder" placeholder="Titular">
-                            <button onclick="saveBank()" class="w-full bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 py-2 rounded-lg text-xs font-bold">Actualizar Datos</button>
-                        </div>
+                        <h3 class="font-bold text-orange-400 mb-4">Ajustes Generales</h3>
+                        <input type="text" id="bank-alias" placeholder="Alias Banco" class="mb-2 text-sm">
+                        <input type="text" id="bank-cbu" placeholder="CBU/CVU" class="mb-2 text-sm">
+                        <button onclick="saveBank()" class="w-full bg-emerald-600/20 text-emerald-400 py-2 rounded-lg text-xs font-bold">Guardar Cambios</button>
                     </div>
                     <div class="glass p-6 rounded-2xl border border-rose-500/20">
-                        <h3 class="font-bold text-rose-400 uppercase text-xs tracking-widest mb-6 text-center">Contraseña Master</h3>
-                        <input type="password" id="new-admin-password" placeholder="Nueva Contraseña" class="mb-2 text-xs">
-                        <button onclick="updateAdminPass()" class="w-full bg-rose-600/20 text-rose-400 border border-rose-500/20 py-2 rounded-lg text-xs font-bold">Cambiar Pass</button>
-                    </div>
-                    <div class="glass p-6 rounded-2xl border border-rose-500/20">
-                        <h3 class="font-bold text-rose-400 uppercase text-xs tracking-widest mb-6">Configuración Base de Datos</h3>
-                        <div class="space-y-3">
-                            <input type="text" id="db-url" placeholder="Supabase URL" class="text-[10px]">
-                            <input type="password" id="db-key" placeholder="Supabase Key" class="text-[10px]">
-                            <button onclick="updateDBConfig()" class="w-full bg-rose-600/20 text-rose-400 border border-rose-500/20 py-2 rounded-lg text-xs font-bold">Guardar y Reiniciar</button>
-                        </div>
+                        <h3 class="font-bold text-rose-400 mb-4">Contraseña Admin</h3>
+                        <input type="password" id="new-admin-password" placeholder="Nueva Clave" class="mb-2 text-sm">
+                        <button onclick="updateAdminPass()" class="w-full bg-rose-600/20 text-rose-400 py-2 rounded-lg text-xs font-bold">Actualizar Clave</button>
                     </div>
                 </div>
             </div>
@@ -185,26 +154,24 @@
     <!-- Modal Producto -->
     <div id="modal-product" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4">
         <div class="glass p-8 rounded-3xl w-full max-w-lg border border-white/10">
-            <h3 class="text-xl font-bold mb-6 text-emerald-400" id="modal-title">Nuevo Producto</h3>
+            <h3 class="text-xl font-bold mb-6 text-emerald-400" id="modal-title">Gestión de Producto</h3>
             <form id="form-product" class="space-y-4">
-                <input type="text" id="p-name" placeholder="Nombre del producto" required>
+                <input type="text" id="p-name" placeholder="Nombre" required>
                 <div class="grid grid-cols-2 gap-4">
                     <input type="number" id="p-price" step="0.01" placeholder="Precio ($)" required>
-                    <select id="p-cat" required>
-                        <option value="">Cargando categorías...</option>
-                    </select>
+                    <select id="p-cat" required><option value="">Categoría</option></select>
                 </div>
-                <input type="text" id="p-img" placeholder="URL de imagen">
-                <div class="flex gap-3 pt-4">
+                <input type="text" id="p-img" placeholder="URL Imagen (Opcional)">
+                <div class="flex gap-2 pt-4">
                     <button type="submit" class="flex-1 btn-primary py-3 rounded-xl font-bold text-white">Guardar</button>
-                    <button type="button" onclick="closeProductModal()" class="px-6 bg-slate-700 py-3 rounded-xl font-bold">Cerrar</button>
+                    <button type="button" onclick="closeProductModal()" class="px-6 bg-slate-700 py-3 rounded-xl font-bold">Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // Credenciales automáticas
+        // Configuración por defecto
         const DEFAULT_URL = "https://peoimydvofprzemjvyzg.supabase.co";
         const DEFAULT_KEY = "sb_publishable_pq5tsxdZqiNJxiQg7R6YpQ_vshWWv7H";
 
@@ -216,108 +183,23 @@
         let cart = [];
         let currentCat = 'all';
 
-        // Lógica de Seguridad Admin
-        let adminAttempts = 0;
+        // Seguridad Admin
         let isViewAdminUnlocked = false;
-        const ADMIN_PASS_KEY = 'cg_admin_pass';
-        const ATTEMPTS_KEY = 'cg_admin_attempts';
-        const LOCKOUT_KEY = 'cg_admin_lockout';
+        const ADMIN_PASS_KEY = 'cg_admin_pass_v2';
+        const ATTEMPTS_KEY = 'cg_admin_attempts_v2';
+        const LOCKOUT_KEY = 'cg_admin_lockout_v2';
 
         window.onload = () => {
-            const url = localStorage.getItem('sb-url') || DEFAULT_URL;
-            const key = localStorage.getItem('sb-key') || DEFAULT_KEY;
-            
-            document.getElementById('db-url').value = url;
-            document.getElementById('db-key').value = key;
-
-            initSupabase(url, key);
+            initSupabase(DEFAULT_URL, DEFAULT_KEY);
             loadCart();
         };
 
-        // --- SISTEMA DE SEGURIDAD ---
-        function checkAdminAccess() {
-            if (isViewAdminUnlocked) {
-                showView('admin');
-                return;
-            }
-
-            const lockoutTime = localStorage.getItem(LOCKOUT_KEY);
-            if (lockoutTime) {
-                const remaining = Math.ceil((parseInt(lockoutTime) - Date.now()) / (1000 * 60));
-                if (remaining > 0) {
-                    alert(`Acceso bloqueado. Intenta de nuevo en ${remaining} minutos.`);
-                    return;
-                } else {
-                    localStorage.removeItem(LOCKOUT_KEY);
-                    localStorage.setItem(ATTEMPTS_KEY, '0');
-                }
-            }
-
-            document.getElementById('modal-admin-login').classList.remove('hidden');
-            document.getElementById('admin-password').focus();
-        }
-
-        function attemptAdminLogin() {
-            const password = document.getElementById('admin-password').value;
-            const masterPass = localStorage.getItem(ADMIN_PASS_KEY) || 'admin123';
-            const errorEl = document.getElementById('login-error-msg');
-            
-            let attempts = parseInt(localStorage.getItem(ATTEMPTS_KEY) || '0');
-
-            if (password === masterPass) {
-                isViewAdminUnlocked = true;
-                localStorage.setItem(ATTEMPTS_KEY, '0');
-                closeAdminLogin();
-                showView('admin');
-                document.getElementById('admin-password').value = '';
-            } else {
-                attempts++;
-                localStorage.setItem(ATTEMPTS_KEY, attempts.toString());
-                
-                if (attempts >= 3) {
-                    const lockoutUntil = Date.now() + (30 * 60 * 1000); // 30 mins
-                    localStorage.setItem(LOCKOUT_KEY, lockoutUntil.toString());
-                    errorEl.innerText = "Demasiados intentos. Bloqueado por 30 minutos.";
-                    errorEl.classList.remove('hidden');
-                    setTimeout(() => closeAdminLogin(), 2000);
-                } else {
-                    errorEl.innerText = `Contraseña incorrecta. Intento ${attempts} de 3.`;
-                    errorEl.classList.remove('hidden');
-                }
-                document.getElementById('admin-password').value = '';
-            }
-        }
-
-        function closeAdminLogin() {
-            document.getElementById('modal-admin-login').classList.add('hidden');
-            document.getElementById('login-error-msg').classList.add('hidden');
-        }
-
-        function logoutAdmin() {
-            isViewAdminUnlocked = false;
-            showView('shop');
-        }
-
-        function updateAdminPass() {
-            const newPass = document.getElementById('new-admin-password').value;
-            if (newPass.length < 4) return alert("Mínimo 4 caracteres");
-            localStorage.setItem(ADMIN_PASS_KEY, newPass);
-            alert("Contraseña actualizada con éxito");
-            document.getElementById('new-admin-password').value = '';
-        }
-
-        // --- LÓGICA SUPABASE ---
         function initSupabase(url, key) {
             try {
                 sb = supabase.createClient(url, key);
-                localStorage.setItem('sb-url', url);
-                localStorage.setItem('sb-key', key);
-                document.getElementById('conn-status').innerText = "CONECTADO";
-                document.getElementById('conn-status').className = "text-[10px] bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full font-bold";
                 loadAllData();
             } catch (e) {
-                document.getElementById('conn-status').innerText = "ERROR DE CONEXIÓN";
-                document.getElementById('conn-status').className = "text-[10px] bg-rose-500/20 text-rose-400 px-3 py-1 rounded-full font-bold";
+                console.error("Error Supabase", e);
             }
         }
 
@@ -339,32 +221,75 @@
                 renderAdmin();
                 updateCheckoutUI();
             } catch (e) {
-                console.error("Error:", e);
+                console.warn("Error al cargar datos.");
             }
         }
 
+        // --- SEGURIDAD ---
+        function checkAdminAccess() {
+            if (isViewAdminUnlocked) { showView('admin'); return; }
+            const lockout = localStorage.getItem(LOCKOUT_KEY);
+            if (lockout && parseInt(lockout) > Date.now()) {
+                const mins = Math.ceil((parseInt(lockout) - Date.now()) / 60000);
+                alert(`Acceso bloqueado por ${mins} minutos.`);
+                return;
+            }
+            document.getElementById('modal-admin-login').classList.remove('hidden');
+        }
+
+        function attemptAdminLogin() {
+            const pass = document.getElementById('admin-password').value;
+            const master = localStorage.getItem(ADMIN_PASS_KEY) || 'admin123';
+            let attempts = parseInt(localStorage.getItem(ATTEMPTS_KEY) || '0');
+
+            if (pass === master) {
+                isViewAdminUnlocked = true;
+                localStorage.setItem(ATTEMPTS_KEY, '0');
+                closeAdminLogin();
+                showView('admin');
+            } else {
+                attempts++;
+                localStorage.setItem(ATTEMPTS_KEY, attempts);
+                if (attempts >= 3) {
+                    localStorage.setItem(LOCKOUT_KEY, Date.now() + 1800000); // 30m
+                    alert("Bloqueado por 30 minutos.");
+                    closeAdminLogin();
+                } else {
+                    document.getElementById('login-error-msg').innerText = `Incorrecto. Intento ${attempts}/3`;
+                    document.getElementById('login-error-msg').classList.remove('hidden');
+                }
+            }
+        }
+
+        function closeAdminLogin() { document.getElementById('modal-admin-login').classList.add('hidden'); }
+        function logoutAdmin() { isViewAdminUnlocked = false; showView('shop'); }
+        function updateAdminPass() {
+            const val = document.getElementById('new-admin-password').value;
+            if(val.length < 4) return alert("Muy corta");
+            localStorage.setItem(ADMIN_PASS_KEY, val);
+            alert("Clave cambiada");
+        }
+
+        // --- TIENDA Y CARRITO ---
         function renderShop() {
             const catCont = document.getElementById('cat-list');
-            catCont.innerHTML = `<button onclick="setFilter('all')" class="px-6 py-2.5 rounded-full font-bold whitespace-nowrap ${currentCat === 'all' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'}">Todos</button>`;
+            catCont.innerHTML = `<button onclick="setFilter('all')" class="px-5 py-2 rounded-full font-bold whitespace-nowrap ${currentCat === 'all' ? 'bg-emerald-600' : 'bg-slate-800 text-slate-400'}">Todos</button>`;
             categories.forEach(c => {
-                catCont.innerHTML += `<button onclick="setFilter('${c.id}')" class="px-6 py-2.5 rounded-full font-bold whitespace-nowrap ${currentCat === c.id ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'}">${c.name}</button>`;
+                catCont.innerHTML += `<button onclick="setFilter('${c.id}')" class="px-5 py-2 rounded-full font-bold whitespace-nowrap ${currentCat === c.id ? 'bg-emerald-600' : 'bg-slate-800 text-slate-400'}">${c.name}</button>`;
             });
 
             const grid = document.getElementById('products-grid');
             let filtered = products;
             if(currentCat !== 'all') filtered = products.filter(p => p.category_id === currentCat);
             
-            grid.innerHTML = filtered.length === 0 ? `<div class="col-span-full py-20 text-center text-slate-500">No hay productos</div>` : 
-            filtered.map(p => `
-                <div class="glass p-4 rounded-3xl flex flex-col group hover:border-emerald-500/50 transition-all">
+            grid.innerHTML = filtered.map(p => `
+                <div class="glass p-4 rounded-3xl flex flex-col group">
                     <div class="img-container mb-4">
-                        <img src="${p.image_url || 'https://via.placeholder.com/400'}" class="group-hover:scale-105 transition-transform" onerror="this.src='https://via.placeholder.com/400'">
+                        <img src="${p.image_url || 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=400'}" onerror="this.src='https://via.placeholder.com/400'">
                     </div>
-                    <h3 class="font-bold text-lg mb-1 line-clamp-1">${p.name}</h3>
-                    <p class="text-emerald-400 font-bold text-xl mb-4">$${parseFloat(p.price).toLocaleString()}</p>
-                    <button onclick="addToCart('${p.id}')" class="mt-auto btn-primary py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-white">
-                        <i class="fa-solid fa-plus"></i> Agregar
-                    </button>
+                    <h3 class="font-bold mb-1">${p.name}</h3>
+                    <p class="text-emerald-400 font-bold text-xl mb-4">$${p.price}</p>
+                    <button onclick="addToCart('${p.id}')" class="btn-primary py-3 rounded-2xl font-bold text-white">Agregar</button>
                 </div>
             `).join('');
         }
@@ -373,11 +298,10 @@
 
         function addToCart(id) {
             const p = products.find(x => x.id === id);
-            const exist = cart.find(x => x.id === id);
-            if(exist) exist.qty++; else cart.push({...p, qty: 1});
+            const item = cart.find(x => x.id === id);
+            if(item) item.qty++; else cart.push({...p, qty: 1});
             saveCart();
             updateCartUI();
-            if(!document.getElementById('cart-sidebar').classList.contains('open')) toggleCart();
         }
 
         function saveCart() { localStorage.setItem('cg_cart', JSON.stringify(cart)); }
@@ -395,155 +319,141 @@
             document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
             
             const cont = document.getElementById('cart-items');
-            cont.innerHTML = cart.length === 0 ? `<div class="text-center py-20 text-slate-500">Vacio</div>` : 
-                cart.map((item, idx) => `
-                    <div class="flex justify-between items-center bg-slate-800/40 p-3 rounded-2xl border border-white/5">
-                        <div class="flex-1 pr-4"><p class="font-bold text-sm">${item.name}</p></div>
+            cont.innerHTML = cart.length === 0 ? `<p class="text-center py-10 text-slate-500">Carrito vacío</p>` : 
+                cart.map((i, idx) => `
+                    <div class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-xl">
+                        <div class="flex-1 font-bold text-sm">${i.name}</div>
                         <div class="flex items-center gap-2">
-                            <button onclick="modQty(${idx}, -1)" class="w-8 h-8 rounded-lg bg-slate-700">-</button>
-                            <span class="font-bold">${item.qty}</span>
-                            <button onclick="modQty(${idx}, 1)" class="w-8 h-8 rounded-lg bg-slate-700">+</button>
+                            <button onclick="modQty(${idx}, -1)" class="w-7 h-7 bg-slate-700 rounded">-</button>
+                            <span>${i.qty}</span>
+                            <button onclick="modQty(${idx}, 1)" class="w-7 h-7 bg-slate-700 rounded">+</button>
                         </div>
                     </div>
                 `).join('');
         }
 
-        function modQty(idx, delta) {
-            cart[idx].qty += delta;
+        function modQty(idx, d) {
+            cart[idx].qty += d;
             if(cart[idx].qty <= 0) cart.splice(idx, 1);
-            saveCart();
-            updateCartUI();
+            saveCart(); updateCartUI();
         }
 
-        function toggleCart() { 
-            document.getElementById('cart-sidebar').classList.toggle('open');
-            document.getElementById('checkout-form').classList.add('hidden');
-            document.getElementById('btn-next').classList.remove('hidden');
-            document.getElementById('btn-submit').classList.add('hidden');
-        }
+        function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('open'); }
 
         function showCheckout() {
-            if(cart.length === 0) return;
+            if(cart.length === 0) return alert("Agrega productos");
             document.getElementById('checkout-form').classList.remove('hidden');
             document.getElementById('btn-next').classList.add('hidden');
             document.getElementById('btn-submit').classList.remove('hidden');
         }
 
         function updateCheckoutUI() {
-            const zSel = document.getElementById('cust-zone');
-            zSel.innerHTML = `<option value="">Selecciona tu zona</option>` + 
-                zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
-
-            const bTxt = document.getElementById('bank-info-txt');
-            bTxt.innerHTML = `Alias: ${bankSettings.bank_alias || '-'}<br>CBU: ${bankSettings.bank_cbu || '-'}`;
+            const sel = document.getElementById('cust-zone');
+            sel.innerHTML = `<option value="">Selecciona Zona</option>` + zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
+            document.getElementById('bank-info-txt').innerHTML = `Alias: ${bankSettings.bank_alias || '-'}<br>CBU: ${bankSettings.bank_cbu || '-'}`;
         }
 
         function updatePaymentUI() {
-            const isTrans = document.getElementById('cust-payment').value === 'transferencia';
-            document.getElementById('bank-data').classList.toggle('hidden', !isTrans);
+            const t = document.getElementById('cust-payment').value === 'transferencia';
+            document.getElementById('bank-data').classList.toggle('hidden', !t);
         }
 
+        // --- PROCESAR PEDIDO (FIJO Y PRIORITARIO POR WA) ---
         async function processOrder() {
             const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
             const address = document.getElementById('cust-address').value.trim();
             const zoneId = document.getElementById('cust-zone').value;
             const payment = document.getElementById('cust-payment').value;
 
-            if(!name || !phone || !address || !zoneId) return alert("Completa los datos");
+            if(!name || !address || !zoneId) return alert("Completa todos los campos obligatorios");
 
             const zone = zones.find(z => z.id === zoneId);
             const total = cart.reduce((a, b) => a + (b.price * b.qty), 0);
 
+            // 1. PRIMERO FORMATEAMOS Y ENVIAMOS EL MENSAJE (ASEGURAMOS LA VENTA)
+            let texto = `*NUEVO PEDIDO - COCINA GOURMET*\n`;
+            texto += `--------------------------\n`;
+            texto += `👤 *Cliente:* ${name}\n`;
+            texto += `📍 *Dirección:* ${address}\n`;
+            texto += `💳 *Pago:* ${payment.toUpperCase()}\n`;
+            texto += `--------------------------\n`;
+            cart.forEach(i => texto += `• ${i.qty}x ${i.name} ($${i.price * i.qty})\n`);
+            texto += `--------------------------\n`;
+            texto += `💰 *TOTAL: $${total}*`;
+
+            const phone = zone && zone.whatsapp ? zone.whatsapp : '5491111111111';
+            const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(texto)}`;
+
+            // 2. INTENTAMOS GUARDAR EN DB EN SEGUNDO PLANO (SIN BLOQUEAR)
             try {
-                const { data: order } = await sb.from('orders').insert([{
-                    customer_name: name, customer_phone: phone, customer_address: address,
-                    zone_id: zoneId, payment_method: payment, total_amount: total
-                }]).select().single();
+                if (sb) {
+                    sb.from('orders').insert([{
+                        customer_name: name, 
+                        customer_address: address, 
+                        zone_id: zoneId, 
+                        total_amount: total
+                    }]).then(res => console.log("DB Guardado", res));
+                }
+            } catch (e) { 
+                console.warn("DB Fallo, pero el pedido sigue"); 
+            }
 
-                await sb.from('order_items').insert(cart.map(i => ({
-                    order_id: order.id, product_name: i.name, unit_price: i.price, quantity: i.qty, subtotal: i.price * i.qty
-                })));
-
-                let msg = `*COCINA GOURMET*\nCliente: ${name}\nTotal: $${total}\nItems:\n`;
-                cart.forEach(i => msg += `- ${i.qty}x ${i.name}\n`);
-                
-                cart = [];
-                saveCart();
-                updateCartUI();
-                toggleCart();
-                window.open(`https://wa.me/${zone.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
-            } catch (err) { alert("Error al procesar"); }
+            // 3. LIMPIEZA Y APERTURA DE WHATSAPP
+            cart = [];
+            saveCart();
+            updateCartUI();
+            toggleCart();
+            
+            // Usamos un pequeño delay para asegurar que el navegador permita la apertura del link
+            setTimeout(() => {
+                window.open(waUrl, '_blank');
+            }, 100);
         }
 
-        // --- ADMIN RENDER ---
+        // --- FUNCIONES ADMIN ---
         function renderAdmin() {
-            const pCont = document.getElementById('admin-products');
-            pCont.innerHTML = products.map(p => `
-                <div class="flex items-center justify-between bg-slate-800/30 p-3 rounded-xl border border-white/5">
+            document.getElementById('admin-products').innerHTML = products.map(p => `
+                <div class="flex justify-between bg-slate-800/40 p-3 rounded-lg">
                     <span>${p.name} ($${p.price})</span>
-                    <button onclick="deleteProduct('${p.id}')" class="text-rose-500"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="deleteProduct('${p.id}')" class="text-rose-400"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
 
-            const zCont = document.getElementById('admin-zones');
-            zCont.innerHTML = zones.map(z => `
-                <div class="flex items-center justify-between bg-white/5 p-2 px-3 rounded-lg text-xs">
-                    <span>${z.name}</span>
-                    <button onclick="deleteZone('${z.id}')" class="text-rose-400"><i class="fa-solid fa-xmark"></i></button>
+            document.getElementById('admin-zones').innerHTML = zones.map(z => `
+                <div class="flex justify-between bg-slate-800/40 p-2 rounded-lg text-sm">
+                    <span>${z.name} (${z.whatsapp})</span>
+                    <button onclick="deleteZone('${z.id}')" class="text-rose-400"><i class="fa-solid fa-x"></i></button>
                 </div>
             `).join('');
-        }
-
-        async function saveBank() {
-            const data = {
-                bank_alias: document.getElementById('bank-alias').value,
-                bank_cbu: document.getElementById('bank-cbu').value,
-                bank_holder: document.getElementById('bank-holder').value
-            };
-            if(bankSettings.id) await sb.from('settings').update(data).eq('id', bankSettings.id);
-            else await sb.from('settings').insert([data]);
-            alert("Guardado");
-            loadAllData();
-        }
-
-        async function updateDBConfig() {
-            const url = document.getElementById('db-url').value;
-            const key = document.getElementById('db-key').value;
-            if(url && key) { initSupabase(url, key); alert("Actualizado"); }
         }
 
         async function addZone() {
-            const name = document.getElementById('new-zone-name').value;
-            const wa = document.getElementById('new-zone-wa').value;
-            if(!name || !wa) return;
-            await sb.from('zones').insert([{ name, whatsapp: wa }]);
+            const n = document.getElementById('new-zone-name').value;
+            const w = document.getElementById('new-zone-wa').value;
+            if(!n || !w) return;
+            await sb.from('zones').insert([{ name: n, whatsapp: w }]);
             loadAllData();
         }
 
-        async function deleteZone(id) {
-            await sb.from('zones').delete().eq('id', id);
+        async function deleteZone(id) { await sb.from('zones').delete().eq('id', id); loadAllData(); }
+        async function deleteProduct(id) { if(confirm("¿Eliminar?")) { await sb.from('products').delete().eq('id', id); loadAllData(); } }
+        async function saveBank() {
+            const d = { bank_alias: document.getElementById('bank-alias').value, bank_cbu: document.getElementById('bank-cbu').value };
+            if(bankSettings.id) await sb.from('settings').update(d).eq('id', bankSettings.id);
+            else await sb.from('settings').insert([d]);
+            alert("Ajustes guardados");
             loadAllData();
         }
 
-        async function deleteProduct(id) {
-            if(confirm("¿Eliminar?")) {
-                await sb.from('products').delete().eq('id', id);
-                loadAllData();
-            }
-        }
-
-        function showView(view) {
-            document.getElementById('view-shop').classList.toggle('hidden', view !== 'shop');
-            document.getElementById('view-admin').classList.toggle('hidden', view !== 'admin');
+        function showView(v) {
+            document.getElementById('view-shop').classList.toggle('hidden', v !== 'shop');
+            document.getElementById('view-admin').classList.toggle('hidden', v !== 'admin');
         }
 
         function openProductModal() {
-            const sel = document.getElementById('p-cat');
-            sel.innerHTML = `<option value="">Categoría</option>` + categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('p-cat').innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             document.getElementById('modal-product').classList.remove('hidden');
         }
-
         function closeProductModal() { document.getElementById('modal-product').classList.add('hidden'); }
 
         document.getElementById('form-product').onsubmit = async (e) => {
