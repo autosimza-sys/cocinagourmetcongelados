@@ -58,6 +58,17 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
+            <div class="relative hidden md:block w-64">
+                <input
+                    type="text"
+                    id="search-input"
+                    placeholder="Buscar productos..."
+                    oninput="handleSearchInput(this.value)"
+                    class="!py-2 !pl-10 !pr-3 text-sm"
+                >
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
+            </div>
+            <button onclick="focusSearch()" class="p-2 text-slate-400 hover:text-white transition-all" title="Buscar productos"><i class="fa-solid fa-magnifying-glass text-xl"></i></button>
             <button onclick="showView('shop')" class="p-2 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-house text-xl"></i></button>
             <button onclick="checkAdminAccess()" class="p-2 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-user-gear text-xl"></i></button>
             <button onclick="toggleCart()" class="relative bg-slate-800 p-3 rounded-xl hover:bg-slate-700 transition-all">
@@ -175,6 +186,15 @@
                         <p class="text-[10px] text-emerald-400 uppercase font-bold tracking-widest mb-2">Más vendido</p>
                         <h3 class="text-xl font-extrabold mb-2">Combo Freezer</h3>
                         <p class="text-slate-400 text-sm mb-4">Para llenar el freezer y resolver la semana.</p>
+                        <div class="bg-slate-950/35 rounded-2xl p-4 mb-4 border border-white/5">
+                            <p class="text-[10px] uppercase font-bold text-slate-500 mb-2">Incluye</p>
+                            <ul class="text-sm text-slate-300 space-y-1">
+                                <li>• 3 pizzas muzzarella grandes</li>
+                                <li>• 2 packs de empanadas x6</li>
+                                <li>• 2 tartines individuales a elección</li>
+                                <li>• Ideal para 5 a 7 comidas rápidas</li>
+                            </ul>
+                        </div>
                         <p class="text-3xl font-extrabold text-emerald-400 mb-1">$97.000</p>
                         <p class="text-xs text-slate-500 mb-5">Valor real estimado: $117.000</p>
                         <button onclick="addPresetCombo('combo_freezer')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
@@ -183,6 +203,15 @@
                         <p class="text-[10px] text-blue-400 uppercase font-bold tracking-widest mb-2">Para compartir</p>
                         <h3 class="text-xl font-extrabold mb-2">Combo Familiar</h3>
                         <p class="text-slate-400 text-sm mb-4">Una compra práctica para varias comidas.</p>
+                        <div class="bg-slate-950/35 rounded-2xl p-4 mb-4 border border-white/5">
+                            <p class="text-[10px] uppercase font-bold text-slate-500 mb-2">Incluye</p>
+                            <ul class="text-sm text-slate-300 space-y-1">
+                                <li>• 2 pizzas grandes</li>
+                                <li>• 2 packs de empanadas x6</li>
+                                <li>• 2 tartines individuales</li>
+                                <li>• Pensado para almuerzo o cena familiar</li>
+                            </ul>
+                        </div>
                         <p class="text-3xl font-extrabold text-emerald-400 mb-1">$75.000</p>
                         <p class="text-xs text-slate-500 mb-5">Ideal para almuerzo, cena y emergencia.</p>
                         <button onclick="addPresetCombo('combo_familiar')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
@@ -191,6 +220,15 @@
                         <p class="text-[10px] text-purple-400 uppercase font-bold tracking-widest mb-2">Negocio</p>
                         <h3 class="text-xl font-extrabold mb-2">Combo Revendedor</h3>
                         <p class="text-slate-400 text-sm mb-4">Pensado para comercios, hostels y ventas rápidas.</p>
+                        <div class="bg-slate-950/35 rounded-2xl p-4 mb-4 border border-white/5">
+                            <p class="text-[10px] uppercase font-bold text-slate-500 mb-2">Incluye</p>
+                            <ul class="text-sm text-slate-300 space-y-1">
+                                <li>• Mix inicial de productos congelados</li>
+                                <li>• Pizzas, empanadas y tartines</li>
+                                <li>• Productos fáciles de cocinar y revender</li>
+                                <li>• Ideal para almacenes, hostels y comercios</li>
+                            </ul>
+                        </div>
                         <p class="text-3xl font-extrabold text-emerald-400 mb-1">$125.000</p>
                         <p class="text-xs text-slate-500 mb-5">Para consultar reposición y margen.</p>
                         <button onclick="addPresetCombo('combo_revendedor')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
@@ -207,9 +245,20 @@
             </div>
 
             <div class="mb-8">
-                <div class="flex justify-between items-end mb-4">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-4">
                     <h2 class="text-3xl font-extrabold">Catálogo Gourmet</h2>
+                    <div class="relative w-full md:w-80">
+                        <input
+                            type="text"
+                            id="search-input-mobile"
+                            placeholder="Buscar pizzas, empanadas, viandas..."
+                            oninput="handleSearchInput(this.value)"
+                            class="!py-3 !pl-10 !pr-3 text-sm"
+                        >
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-4 text-slate-400 text-sm"></i>
+                    </div>
                 </div>
+                <div id="search-result-text" class="hidden text-xs text-slate-400 mb-3"></div>
                 <div class="flex gap-2 overflow-x-auto pb-4" id="cat-list"></div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="products-grid"></div>
@@ -388,6 +437,17 @@
         </div>
     </div>
 
+
+    <!-- Botón flotante de consulta -->
+    <button
+        onclick="openGeneralConsult()"
+        class="fixed bottom-5 right-5 bg-emerald-500 hover:bg-emerald-400 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 z-50 font-bold border border-white/20"
+        title="Consultar por WhatsApp"
+    >
+        <i class="fa-brands fa-whatsapp text-xl"></i>
+        <span class="hidden sm:inline">Consultar</span>
+    </button>
+
     <script>
         // Valores por defecto
         const DEFAULT_URL = "https://peoimydvofprzemjvyzg.supabase.co";
@@ -395,7 +455,7 @@
 
         let sb = null;
         let products = [], categories = [], zones = [], cart = [], orders = [];
-        let currentCat = 'all', isViewAdminUnlocked = false;
+        let currentCat = 'all', isViewAdminUnlocked = false, searchTerm = '';
 
         const PRESET_COMBOS = [
             {
@@ -403,21 +463,21 @@
                 name: 'Combo Freezer',
                 price: 97000,
                 image_url: 'https://via.placeholder.com/400?text=Combo+Freezer',
-                description: 'Para llenar el freezer y resolver la semana.'
+                description: 'Incluye: 3 pizzas muzzarella grandes + 2 packs de empanadas x6 + 2 tartines individuales a elección. Ideal para 5 a 7 comidas rápidas.'
             },
             {
                 id: 'combo_familiar',
                 name: 'Combo Familiar',
                 price: 75000,
                 image_url: 'https://via.placeholder.com/400?text=Combo+Familiar',
-                description: 'Una compra práctica para varias comidas.'
+                description: 'Incluye: 2 pizzas grandes + 2 packs de empanadas x6 + 2 tartines individuales. Pensado para almuerzo o cena familiar.'
             },
             {
                 id: 'combo_revendedor',
                 name: 'Combo Revendedor',
                 price: 125000,
                 image_url: 'https://via.placeholder.com/400?text=Combo+Revendedor',
-                description: 'Pensado para comercios, hostels y reventa.'
+                description: 'Incluye: mix inicial de productos congelados con pizzas, empanadas y tartines. Ideal para almacenes, hostels y comercios.'
             }
         ];
 
@@ -604,10 +664,28 @@
             });
 
             const grid = document.getElementById('products-grid');
+            const term = (searchTerm || '').trim().toLowerCase();
             let filtered = currentCat === 'all' ? products : products.filter(p => p.category_id === currentCat);
+            if(term) {
+                filtered = filtered.filter(p =>
+                    (p.name || '').toLowerCase().includes(term) ||
+                    (p.description || '').toLowerCase().includes(term)
+                );
+            }
+
+            const resultText = document.getElementById('search-result-text');
+            if(resultText) {
+                if(term) {
+                    resultText.classList.remove('hidden');
+                    resultText.innerHTML = `Resultado de búsqueda: <span class="text-emerald-400 font-bold">${filtered.length}</span> producto(s) para "${term}"`;
+                } else {
+                    resultText.classList.add('hidden');
+                    resultText.innerHTML = '';
+                }
+            }
             
             if(filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500 font-bold">No hay productos en esta categoría</div>`;
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500 font-bold">No se encontraron productos. Probá con pizza, empanada, tarta o vianda.</div>`;
                 return;
             }
 
@@ -617,10 +695,55 @@
                         <img src="${p.image_url || ''}" onerror="this.src='https://via.placeholder.com/400?text=Cocina+Gourmet'">
                     </div>
                     <h3 class="font-bold mb-1 text-slate-100">${p.name}</h3>
+                    ${(p.name || '').toLowerCase().includes('tartin') || (p.name || '').toLowerCase().includes('tartín') ? `<p class="text-xs text-slate-400 mb-2">Porción individual • Lista para calentar</p>` : ''}
                     <p class="text-emerald-400 font-bold text-xl mb-4">$${parseFloat(p.price).toLocaleString()}</p>
-                    <button onclick="addToCart('${p.id}')" class="btn-primary py-3 rounded-2xl font-bold text-white mt-auto">Agregar</button>
+                    <div class="grid grid-cols-2 gap-2 mt-auto">
+                        <button onclick="consultProduct('${p.id}')" class="bg-slate-800 hover:bg-slate-700 py-3 rounded-2xl font-bold text-white border border-white/10 text-sm">Consultar</button>
+                        <button onclick="addToCart('${p.id}')" class="btn-primary py-3 rounded-2xl font-bold text-white text-sm">Agregar</button>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        function handleSearchInput(value) {
+            searchTerm = value || '';
+            const desktop = document.getElementById('search-input');
+            const mobile = document.getElementById('search-input-mobile');
+            if(desktop && desktop.value !== searchTerm) desktop.value = searchTerm;
+            if(mobile && mobile.value !== searchTerm) mobile.value = searchTerm;
+            trackEvent('product_search', { search: searchTerm });
+            renderShop();
+        }
+
+        function focusSearch() {
+            showView('shop');
+            const input = document.getElementById('search-input-mobile') || document.getElementById('search-input');
+            if(input) {
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => input.focus(), 300);
+            }
+        }
+
+        function consultProduct(id) {
+            const p = products.find(x => x.id === id) || PRESET_COMBOS.find(x => x.id === id);
+            const wa = getConsultWhatsapp();
+            const msg = p
+                ? `Hola, quiero consultar por este producto de Cocina Gourmet: ${p.name}. ¿Hay stock?`
+                : `Hola, quiero consultar por los productos de Cocina Gourmet.`;
+            trackEvent('product_consult_click', { product_id: id, product_name: p ? p.name : '' });
+            window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function getConsultWhatsapp() {
+            const zoneWithWa = zones.find(z => z.whatsapp);
+            return zoneWithWa ? zoneWithWa.whatsapp : '5492616668454';
+        }
+
+        function openGeneralConsult() {
+            const wa = getConsultWhatsapp();
+            const msg = 'Hola, quiero consultar por los productos de Cocina Gourmet.';
+            trackEvent('general_consult_click');
+            window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         function setFilter(id) { currentCat = id; trackEvent('category_filter', { category_id: id }); renderShop(); }
