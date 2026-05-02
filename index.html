@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cocina Gourmet | Pedidos Online</title>
+    <title>Comida Congelada en Mendoza | Cocina Gourmet | Pizzas, Empanadas y Viandas</title>
+    <meta name="description" content="Cocina Gourmet: comida congelada en Mendoza. Pizzas, empanadas, tartines y viandas listas en minutos. Pedidos por WhatsApp y delivery por zona.">
+    <meta name="keywords" content="comida congelada Mendoza, pizzas congeladas Mendoza, empanadas congeladas Mendoza, viandas Mendoza, comida casera congelada, delivery comida congelada Mendoza, Cocina Gourmet">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Cocina Gourmet | Comida congelada en Mendoza">
+    <meta property="og:description" content="Freezer lleno, semana resuelta. Pizzas, empanadas, tartines y viandas listas para calentar.">
+    <meta property="og:type" content="website">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -31,6 +37,10 @@
 
         .pop-in { animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .hero-gradient { background: radial-gradient(circle at top left, rgba(16,185,129,.30), transparent 35%), radial-gradient(circle at bottom right, rgba(59,130,246,.25), transparent 30%), rgba(15,23,42,.75); }
+        .combo-card { position: relative; overflow: hidden; }
+        .combo-card:before { content: ""; position: absolute; inset: -40%; background: radial-gradient(circle, rgba(16,185,129,.12), transparent 55%); transform: rotate(12deg); pointer-events: none; }
+        .stat-card { background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; padding: 1rem; }
     </style>
 </head>
 <body>
@@ -91,12 +101,18 @@
         <div class="p-6 bg-slate-800/40 border-t border-white/10 space-y-4">
             <div id="checkout-form" class="hidden space-y-3 pb-4">
                 <input type="text" id="cust-name" placeholder="Tu Nombre">
+                <input type="tel" id="cust-phone" placeholder="Tu WhatsApp / Teléfono">
+                <input type="email" id="cust-email" placeholder="Email (opcional)">
                 <input type="text" id="cust-address" placeholder="Dirección de entrega">
-                <select id="cust-zone" onchange="calculateFinalTotal()"></select>
-                <select id="cust-payment" onchange="updatePaymentUI()">
+                <select id="cust-zone" onchange="calculateFinalTotal(); trackEvent('zone_selected', { zone_id: this.value });"></select>
+                <select id="cust-payment" onchange="updatePaymentUI(); trackEvent('payment_selected', { payment: this.value });">
                     <option value="efectivo">Efectivo al recibir</option>
                     <option value="transferencia">Transferencia Bancaria</option>
                 </select>
+                <label class="flex items-start gap-2 text-[11px] text-slate-400 leading-tight">
+                    <input type="checkbox" id="cust-optin" class="mt-1 !w-auto">
+                    Acepto recibir promociones y novedades de Cocina Gourmet por WhatsApp o email.
+                </label>
                 <div id="bank-data" class="hidden p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-400">
                     <p class="font-bold mb-1 text-white">Datos para Transferencia:</p>
                     <div id="bank-info-txt" class="whitespace-pre-line text-slate-300"></div>
@@ -114,6 +130,82 @@
     <main class="max-w-7xl mx-auto px-4 py-8">
         <!-- TIENDA -->
         <section id="view-shop">
+            <!-- HERO COMERCIAL -->
+            <div class="hero-gradient glass rounded-[2rem] p-6 md:p-10 mb-10 border border-emerald-500/20">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <p class="text-emerald-400 font-bold uppercase text-xs tracking-[0.25em] mb-3">Cocina Gourmet Congelados</p>
+                        <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">
+                            Comida lista en <span class="text-emerald-400">5 minutos</span>
+                        </h1>
+                        <p class="text-slate-300 text-lg md:text-xl mb-6">
+                            Pizzas, empanadas, tartines y viandas caseras para tener el freezer lleno y resolver almuerzos o cenas sin cocinar.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button onclick="document.getElementById('products-grid').scrollIntoView({behavior:'smooth'}); trackEvent('hero_catalog_click')" class="btn-primary px-6 py-4 rounded-2xl font-bold text-white">
+                                Ver catálogo
+                            </button>
+                            <button onclick="toggleCart(); trackEvent('hero_cart_click')" class="bg-slate-800 hover:bg-slate-700 px-6 py-4 rounded-2xl font-bold text-white border border-white/10">
+                                Pedir por WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                    <div class="glass rounded-[2rem] p-6 border border-white/10">
+                        <h3 class="text-2xl font-extrabold mb-3">🔥 Promesa simple</h3>
+                        <ul class="space-y-3 text-slate-300">
+                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Comida casera congelada</li>
+                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Lista para horno o calentar</li>
+                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Ideal para familias, comercios y freezer</li>
+                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Pedido directo por WhatsApp</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMBOS -->
+            <div class="mb-10">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <p class="text-emerald-400 font-bold uppercase text-[10px] tracking-widest">Comprá mejor</p>
+                        <h2 class="text-2xl md:text-3xl font-extrabold">Combos recomendados</h2>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div class="combo-card glass p-6 rounded-3xl border border-emerald-500/20">
+                        <p class="text-[10px] text-emerald-400 uppercase font-bold tracking-widest mb-2">Más vendido</p>
+                        <h3 class="text-xl font-extrabold mb-2">Combo Freezer</h3>
+                        <p class="text-slate-400 text-sm mb-4">Para llenar el freezer y resolver la semana.</p>
+                        <p class="text-3xl font-extrabold text-emerald-400 mb-1">$97.000</p>
+                        <p class="text-xs text-slate-500 mb-5">Valor real estimado: $117.000</p>
+                        <button onclick="addPresetCombo('combo_freezer')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
+                    </div>
+                    <div class="combo-card glass p-6 rounded-3xl border border-blue-500/20">
+                        <p class="text-[10px] text-blue-400 uppercase font-bold tracking-widest mb-2">Para compartir</p>
+                        <h3 class="text-xl font-extrabold mb-2">Combo Familiar</h3>
+                        <p class="text-slate-400 text-sm mb-4">Una compra práctica para varias comidas.</p>
+                        <p class="text-3xl font-extrabold text-emerald-400 mb-1">$75.000</p>
+                        <p class="text-xs text-slate-500 mb-5">Ideal para almuerzo, cena y emergencia.</p>
+                        <button onclick="addPresetCombo('combo_familiar')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
+                    </div>
+                    <div class="combo-card glass p-6 rounded-3xl border border-purple-500/20">
+                        <p class="text-[10px] text-purple-400 uppercase font-bold tracking-widest mb-2">Negocio</p>
+                        <h3 class="text-xl font-extrabold mb-2">Combo Revendedor</h3>
+                        <p class="text-slate-400 text-sm mb-4">Pensado para comercios, hostels y ventas rápidas.</p>
+                        <p class="text-3xl font-extrabold text-emerald-400 mb-1">$125.000</p>
+                        <p class="text-xs text-slate-500 mb-5">Para consultar reposición y margen.</p>
+                        <button onclick="addPresetCombo('combo_revendedor')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TEXTO SEO VISIBLE -->
+            <div class="glass rounded-3xl p-5 md:p-6 mb-10 border border-white/5">
+                <h2 class="text-xl font-bold mb-2">Comida congelada en Mendoza</h2>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    En Cocina Gourmet preparás tu pedido online de pizzas congeladas, empanadas, tartines y viandas caseras. Comprás fácil, elegís tu zona de envío y confirmás el pedido por WhatsApp.
+                </p>
+            </div>
+
             <div class="mb-8">
                 <div class="flex justify-between items-end mb-4">
                     <h2 class="text-3xl font-extrabold">Catálogo Gourmet</h2>
@@ -155,6 +247,36 @@
                 </div>
             </div>
             
+            <div class="glass p-6 rounded-2xl mb-8 border border-purple-500/20">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+                    <div>
+                        <h3 class="font-bold text-purple-400 flex items-center gap-2"><i class="fa-solid fa-chart-line"></i> Estadísticas de navegación</h3>
+                        <p class="text-xs text-slate-500">Mide acciones del navegador actual. Si creás la tabla analytics_events en Supabase, también intenta guardar eventos online.</p>
+                    </div>
+                    <button onclick="resetLocalAnalytics()" class="bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar estadísticas locales</button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-bold">Visitas</p><h4 id="ana-visits" class="text-2xl font-bold">0</h4></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-bold">Agregados</p><h4 id="ana-adds" class="text-2xl font-bold">0</h4></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-bold">Checkout</p><h4 id="ana-checkout" class="text-2xl font-bold">0</h4></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-bold">WhatsApp</p><h4 id="ana-whatsapp" class="text-2xl font-bold">0</h4></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div class="stat-card">
+                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-2">Producto más agregado</p>
+                        <p id="ana-top-product" class="font-bold text-white">Sin datos</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-2">Zona más elegida</p>
+                        <p id="ana-top-zone" class="font-bold text-white">Sin datos</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-2">Origen</p>
+                        <p id="ana-referrer" class="font-bold text-white">Directo / sin datos</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 space-y-6">
                     <!-- ÚLTIMOS PEDIDOS -->
@@ -275,6 +397,30 @@
         let products = [], categories = [], zones = [], cart = [], orders = [];
         let currentCat = 'all', isViewAdminUnlocked = false;
 
+        const PRESET_COMBOS = [
+            {
+                id: 'combo_freezer',
+                name: 'Combo Freezer',
+                price: 97000,
+                image_url: 'https://via.placeholder.com/400?text=Combo+Freezer',
+                description: 'Para llenar el freezer y resolver la semana.'
+            },
+            {
+                id: 'combo_familiar',
+                name: 'Combo Familiar',
+                price: 75000,
+                image_url: 'https://via.placeholder.com/400?text=Combo+Familiar',
+                description: 'Una compra práctica para varias comidas.'
+            },
+            {
+                id: 'combo_revendedor',
+                name: 'Combo Revendedor',
+                price: 125000,
+                image_url: 'https://via.placeholder.com/400?text=Combo+Revendedor',
+                description: 'Pensado para comercios, hostels y reventa.'
+            }
+        ];
+
         window.onload = () => initApp();
 
         function initApp() {
@@ -286,6 +432,7 @@
             document.getElementById('conf-db-key').value = savedKey;
             document.getElementById('conf-bank-info').value = localStorage.getItem('cg_bank_info') || "Banco: \nCBU: \nAlias: ";
             
+            trackEvent('page_view', { referrer: document.referrer || 'directo' });
             connectDB(savedUrl, savedKey);
         }
 
@@ -331,6 +478,7 @@
                 updateCheckoutUI();
                 loadCart();
                 updateStats();
+                renderAnalyticsStats();
             } catch (e) { console.error("Error cargando tablas:", e); }
         }
 
@@ -340,6 +488,80 @@
             document.getElementById('stat-orders-today').innerText = ordersToday;
             document.getElementById('stat-products').innerText = products.length;
             document.getElementById('stat-cats').innerText = categories.length;
+        }
+
+        // --- ANALYTICS / ESTADÍSTICAS ---
+        function getAnalyticsEvents() {
+            return JSON.parse(localStorage.getItem('cg_analytics_events') || '[]');
+        }
+
+        function saveAnalyticsEvents(events) {
+            localStorage.setItem('cg_analytics_events', JSON.stringify(events.slice(-1000)));
+        }
+
+        async function trackEvent(type, data = {}) {
+            const event = {
+                type,
+                data,
+                created_at: new Date().toISOString(),
+                path: location.pathname,
+                referrer: document.referrer || 'directo'
+            };
+
+            const events = getAnalyticsEvents();
+            events.push(event);
+            saveAnalyticsEvents(events);
+            renderAnalyticsStats();
+
+            // Si más adelante creás una tabla analytics_events en Supabase, esto empieza a guardar online.
+            try {
+                if (sb) await sb.from('analytics_events').insert([event]);
+            } catch(e) {
+                // No frena la web si la tabla no existe.
+            }
+        }
+
+        function countBy(events, keyFn) {
+            return events.reduce((acc, ev) => {
+                const key = keyFn(ev);
+                if(!key) return acc;
+                acc[key] = (acc[key] || 0) + 1;
+                return acc;
+            }, {});
+        }
+
+        function topKey(obj) {
+            const entries = Object.entries(obj);
+            if(entries.length === 0) return 'Sin datos';
+            entries.sort((a,b) => b[1] - a[1]);
+            return `${entries[0][0]} (${entries[0][1]})`;
+        }
+
+        function renderAnalyticsStats() {
+            const events = getAnalyticsEvents();
+
+            const elVisits = document.getElementById('ana-visits');
+            if(!elVisits) return;
+
+            elVisits.innerText = events.filter(e => e.type === 'page_view').length;
+            document.getElementById('ana-adds').innerText = events.filter(e => e.type === 'add_to_cart').length;
+            document.getElementById('ana-checkout').innerText = events.filter(e => e.type === 'checkout_started').length;
+            document.getElementById('ana-whatsapp').innerText = events.filter(e => e.type === 'whatsapp_order').length;
+
+            const productCounts = countBy(events.filter(e => e.type === 'add_to_cart'), e => e.data?.product_name);
+            const zoneCounts = countBy(events.filter(e => e.type === 'zone_selected' || e.type === 'whatsapp_order'), e => e.data?.zone_name || e.data?.zone_id);
+            const refCounts = countBy(events.filter(e => e.type === 'page_view'), e => e.referrer || 'directo');
+
+            document.getElementById('ana-top-product').innerText = topKey(productCounts);
+            document.getElementById('ana-top-zone').innerText = topKey(zoneCounts);
+            document.getElementById('ana-referrer').innerText = topKey(refCounts);
+        }
+
+        function resetLocalAnalytics() {
+            if(confirm("¿Borrar estadísticas locales de este navegador?")) {
+                localStorage.removeItem('cg_analytics_events');
+                renderAnalyticsStats();
+            }
         }
 
         // --- CONFIGURACIONES ---
@@ -401,22 +623,30 @@
             `).join('');
         }
 
-        function setFilter(id) { currentCat = id; renderShop(); }
+        function setFilter(id) { currentCat = id; trackEvent('category_filter', { category_id: id }); renderShop(); }
 
         // --- CARRITO ---
         function addToCart(id) {
-            const p = products.find(x => x.id === id);
+            const p = products.find(x => x.id === id) || PRESET_COMBOS.find(x => x.id === id);
+            if(!p) return alert("Producto no encontrado.");
             const item = cart.find(x => x.id === id);
             if(item) item.qty++; else cart.push({...p, qty: 1});
             saveCart(); updateCartUI();
+            trackEvent('add_to_cart', { product_id: p.id, product_name: p.name, price: p.price });
             document.getElementById('added-product-name').innerText = p.name;
             document.getElementById('modal-added-confirm').classList.remove('hidden');
         }
+
+        function addPresetCombo(comboId) {
+            addToCart(comboId);
+            trackEvent('combo_added', { combo_id: comboId });
+        }
+
         function saveCart() { localStorage.setItem('cg_cart_v3', JSON.stringify(cart.map(i=>({id:i.id, qty:i.qty})))); }
         function loadCart() { 
             const saved = JSON.parse(localStorage.getItem('cg_cart_v3') || '[]');
             cart = saved.map(s => {
-                const p = products.find(x => x.id === s.id);
+                const p = products.find(x => x.id === s.id) || PRESET_COMBOS.find(x => x.id === s.id);
                 return p ? {...p, qty: s.qty} : null;
             }).filter(Boolean);
             updateCartUI();
@@ -627,6 +857,7 @@
         // --- CHECKOUT ---
         function showCheckout() {
             if(cart.length === 0) return;
+            trackEvent('checkout_started', { cart_items: cart.reduce((a,b)=>a+b.qty,0), cart_total: cart.reduce((a,b)=>a+(b.price*b.qty),0) });
             document.getElementById('checkout-form').classList.remove('hidden');
             document.getElementById('btn-next').classList.add('hidden');
             document.getElementById('btn-submit').classList.remove('hidden');
@@ -645,9 +876,12 @@
 
         async function processOrder() {
             const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+            const email = document.getElementById('cust-email').value.trim();
+            const optin = document.getElementById('cust-optin').checked;
             const address = document.getElementById('cust-address').value.trim();
             const payment = document.getElementById('cust-payment').value;
-            if(!name || !address) return alert("Por favor, completa tu nombre y dirección de entrega.");
+            if(!name || !phone || !address) return alert("Por favor, completa tu nombre, WhatsApp y dirección de entrega.");
             
             const zone = zones.find(z => z.id === document.getElementById('cust-zone').value);
             if(!zone) return alert("Debes seleccionar una zona de envío.");
@@ -659,7 +893,11 @@
             try {
                 await sb.from('orders').insert([{
                     customer_name: name, customer_address: address, zone_name: zone.name,
-                    items: JSON.stringify(cart.map(i => ({ name: i.name, qty: i.qty, price: i.price }))),
+                    items: JSON.stringify({
+                        cart: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+                        customer: { phone, email, optin },
+                        tracking: { referrer: document.referrer || 'directo', created_at: new Date().toISOString() }
+                    }),
                     total: totalNum
                 }]);
             } catch(e) { console.warn("Fallo al guardar copia de orden en DB:", e); }
@@ -681,6 +919,7 @@
                 msg += `_Solicito validar los datos para la transferencia bancaria._`;
             }
 
+            trackEvent('whatsapp_order', { total: totalNum, zone_name: zone.name, payment, customer_has_email: !!email, optin });
             window.open(`https://wa.me/${zone.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
             
             // Cleanup
@@ -688,6 +927,11 @@
             document.getElementById('checkout-form').classList.add('hidden');
             document.getElementById('btn-next').classList.remove('hidden');
             document.getElementById('btn-submit').classList.add('hidden');
+            document.getElementById('cust-name').value = '';
+            document.getElementById('cust-phone').value = '';
+            document.getElementById('cust-email').value = '';
+            document.getElementById('cust-address').value = '';
+            document.getElementById('cust-optin').checked = false;
             alert("✅ ¡Pedido enviado correctamente!");
         }
     </script>
