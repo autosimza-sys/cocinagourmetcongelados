@@ -26,7 +26,7 @@
             background: #334155; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; margin-right: 1rem;
         }
 
-        .img-container { position: relative; overflow: hidden; padding-top: 80%; border-radius: 1rem; background: #1e293b; }
+        .img-container { position: relative; overflow: hidden; padding-top: 68%; border-radius: 1rem; background: #1e293b; }
         .img-container img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         
         .cart-sidebar { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -261,7 +261,7 @@
                 <div id="search-result-text" class="hidden text-xs text-slate-400 mb-3"></div>
                 <div class="flex gap-2 overflow-x-auto pb-4" id="cat-list"></div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="products-grid"></div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5" id="products-grid"></div>
         </section>
 
         <!-- ADMIN -->
@@ -690,13 +690,13 @@
             }
 
             grid.innerHTML = filtered.map(p => `
-                <div class="glass p-4 rounded-3xl flex flex-col group pop-in border border-white/5 hover:border-emerald-500/30 transition-all">
+                <div class="glass p-3 md:p-4 rounded-2xl md:rounded-3xl flex flex-col group pop-in border border-white/5 hover:border-emerald-500/30 transition-all">
                     <div class="img-container mb-4 shadow-xl">
                         <img src="${p.image_url || ''}" onerror="this.src='https://via.placeholder.com/400?text=Cocina+Gourmet'">
                     </div>
                     <h3 class="font-bold mb-1 text-slate-100">${p.name}</h3>
                     ${(p.name || '').toLowerCase().includes('tartin') || (p.name || '').toLowerCase().includes('tartín') ? `<p class="text-xs text-slate-400 mb-2">Porción individual • Lista para calentar</p>` : ''}
-                    <p class="text-emerald-400 font-bold text-xl mb-4">$${parseFloat(p.price).toLocaleString()}</p>
+                    <p class="text-emerald-400 font-bold text-base md:text-xl mb-3">$${parseFloat(p.price).toLocaleString()}</p>
                     <div class="grid grid-cols-2 gap-2 mt-auto">
                         <button onclick="consultProduct('${p.id}')" class="bg-slate-800 hover:bg-slate-700 py-3 rounded-2xl font-bold text-white border border-white/10 text-sm">Consultar</button>
                         <button onclick="addToCart('${p.id}')" class="btn-primary py-3 rounded-2xl font-bold text-white text-sm">Agregar</button>
@@ -1058,5 +1058,13 @@
             alert("✅ ¡Pedido enviado correctamente!");
         }
     </script>
+
+    <!-- BOTON FIJO COMPRAR -->
+    <div class="fixed bottom-0 left-0 w-full bg-slate-900/95 backdrop-blur border-t border-white/10 p-3 z-50 md:hidden">
+        <button onclick="toggleCart()" class="w-full btn-primary py-3 rounded-xl font-bold text-white text-sm">
+            🛒 Ver pedido / Comprar
+        </button>
+    </div>
+
 </body>
 </html>
