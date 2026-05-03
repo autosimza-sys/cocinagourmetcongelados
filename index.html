@@ -316,9 +316,12 @@
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                     <div>
                         <h3 class="font-bold text-purple-400 flex items-center gap-2"><i class="fa-solid fa-chart-line"></i> Estadísticas de navegación</h3>
-                        <p class="text-xs text-slate-500">Mide acciones del navegador actual. Si creás la tabla analytics_events en Supabase, también intenta guardar eventos online.</p>
+                        <p class="text-xs text-slate-500">Guarda estadísticas por día en Supabase usando la tabla analytics_daily. Si la tabla todavía no existe, sigue midiendo localmente en este navegador.</p>
                     </div>
-                    <button onclick="resetLocalAnalytics()" class="bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar estadísticas locales</button>
+                    <div class="flex flex-col md:flex-row gap-2">
+                        <span id="ana-db-status" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">DB: verificando</span>
+                        <button onclick="resetLocalAnalytics()" class="bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar estadísticas locales</button>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
                     <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-bold">Visitas</p><h4 id="ana-visits" class="text-2xl font-bold">0</h4></div>
@@ -339,6 +342,10 @@
                         <p class="text-[10px] uppercase text-slate-500 font-bold mb-2">Origen</p>
                         <p id="ana-referrer" class="font-bold text-white">Directo / sin datos</p>
                     </div>
+                </div>
+                <div class="stat-card mt-4 text-sm">
+                    <p class="text-[10px] uppercase text-slate-500 font-bold mb-2">Resumen por día guardado en base</p>
+                    <div id="ana-daily-list" class="space-y-1 text-slate-300">Sin datos todavía</div>
                 </div>
             </div>
 
@@ -588,6 +595,8 @@
                 loadCart();
                 updateStats();
                 renderAnalyticsStats();
+                loadDailyAnalyticsStats();
+                renderAnalyticsStats();
             } catch (e) { console.error("Error cargando tablas:", e); }
         }
 
@@ -608,6 +617,75 @@
             localStorage.setItem('cg_analytics_events', JSON.stringify(events.slice(-1000)));
         }
 
+        function todayDateKey() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function analyticsLabelsForEvent(event) {
+            const labels = ['general'];
+            const data = event.data || {};
+
+            if(event.type === 'add_to_cart' && data.product_name) labels.push(data.product_name);
+            if(event.type === 'product_consult_click' && data.product_name) labels.push(data.product_name);
+            if(event.type === 'zone_selected' && (data.zone_name || data.zone_id)) labels.push(data.zone_name || data.zone_id);
+            if(event.type === 'whatsapp_order' && data.zone_name) labels.push(data.zone_name);
+            if(event.type === 'payment_selected' && data.payment) labels.push(data.payment);
+            if(event.type === 'category_filter' && data.category_name) labels.push(data.category_name);
+
+            return [...new Set(labels.filter(Boolean))];
+        }
+
+        async function incrementDailyAnalyticsRow(eventType, label) {
+            if(!sb) return;
+            const eventDate = todayDateKey();
+
+            const { data: existing, error: selectError } = await sb
+                .from('analytics_daily')
+                .select('total')
+                .eq('event_date', eventDate)
+                .eq('event_type', eventType)
+                .eq('label', label)
+                .maybeSingle();
+
+            if(selectError) throw selectError;
+
+            const nextTotal = existing && typeof existing.total === 'number' ? existing.total + 1 : 1;
+
+            const { error: upsertError } = await sb
+                .from('analytics_daily')
+                .upsert([{
+                    event_date: eventDate,
+                    event_type: eventType,
+                    label,
+                    total: nextTotal,
+                    updated_at: new Date().toISOString()
+                }], { onConflict: 'event_date,event_type,label' });
+
+            if(upsertError) throw upsertError;
+        }
+
+        async function saveDailyAnalytics(event) {
+            try {
+                const labels = analyticsLabelsForEvent(event);
+                for (const label of labels) {
+                    await incrementDailyAnalyticsRow(event.type, label);
+                }
+
+                const dbStatus = document.getElementById('ana-db-status');
+                if(dbStatus) {
+                    dbStatus.innerText = 'DB: guardando por día';
+                    dbStatus.className = 'bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-xl text-xs font-bold';
+                }
+            } catch(e) {
+                const dbStatus = document.getElementById('ana-db-status');
+                if(dbStatus) {
+                    dbStatus.innerText = 'DB: falta analytics_daily';
+                    dbStatus.className = 'bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold';
+                }
+                // No frena la web si la tabla todavía no existe.
+            }
+        }
+
         async function trackEvent(type, data = {}) {
             const event = {
                 type,
@@ -622,7 +700,10 @@
             saveAnalyticsEvents(events);
             renderAnalyticsStats();
 
-            // Si más adelante creás una tabla analytics_events en Supabase, esto empieza a guardar online.
+            await saveDailyAnalytics(event);
+            loadDailyAnalyticsStats();
+
+            // Guarda el detalle de eventos si también existe la tabla analytics_events.
             try {
                 if (sb) await sb.from('analytics_events').insert([event]);
             } catch(e) {
@@ -666,10 +747,84 @@
             document.getElementById('ana-referrer').innerText = topKey(refCounts);
         }
 
+        async function loadDailyAnalyticsStats() {
+            if(!sb) return;
+            const elVisits = document.getElementById('ana-visits');
+            if(!elVisits) return;
+
+            try {
+                const fromDate = new Date();
+                fromDate.setDate(fromDate.getDate() - 30);
+                const fromKey = fromDate.toISOString().split('T')[0];
+
+                const { data, error } = await sb
+                    .from('analytics_daily')
+                    .select('*')
+                    .gte('event_date', fromKey)
+                    .order('event_date', { ascending: false });
+
+                if(error) throw error;
+
+                const dbStatus = document.getElementById('ana-db-status');
+                if(dbStatus) {
+                    dbStatus.innerText = 'DB: activa por día';
+                    dbStatus.className = 'bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-xl text-xs font-bold';
+                }
+
+                const today = todayDateKey();
+                const todayRows = (data || []).filter(r => r.event_date === today && r.label === 'general');
+
+                const getTodayTotal = (type) => {
+                    const row = todayRows.find(r => r.event_type === type);
+                    return row ? Number(row.total || 0) : 0;
+                };
+
+                document.getElementById('ana-visits').innerText = getTodayTotal('page_view');
+                document.getElementById('ana-adds').innerText = getTodayTotal('add_to_cart');
+                document.getElementById('ana-checkout').innerText = getTodayTotal('checkout_started');
+                document.getElementById('ana-whatsapp').innerText = getTodayTotal('whatsapp_order');
+
+                const topProductRows = (data || []).filter(r => r.event_type === 'add_to_cart' && r.label !== 'general');
+                const productCounts = topProductRows.reduce((acc, r) => {
+                    acc[r.label] = (acc[r.label] || 0) + Number(r.total || 0);
+                    return acc;
+                }, {});
+
+                const topZoneRows = (data || []).filter(r => (r.event_type === 'zone_selected' || r.event_type === 'whatsapp_order') && r.label !== 'general');
+                const zoneCounts = topZoneRows.reduce((acc, r) => {
+                    acc[r.label] = (acc[r.label] || 0) + Number(r.total || 0);
+                    return acc;
+                }, {});
+
+                document.getElementById('ana-top-product').innerText = topKey(productCounts);
+                document.getElementById('ana-top-zone').innerText = topKey(zoneCounts);
+
+                const days = [...new Set((data || []).map(r => r.event_date))].slice(0, 7);
+                const dailyHtml = days.map(day => {
+                    const rows = (data || []).filter(r => r.event_date === day && r.label === 'general');
+                    const visits = rows.find(r => r.event_type === 'page_view')?.total || 0;
+                    const adds = rows.find(r => r.event_type === 'add_to_cart')?.total || 0;
+                    const checkout = rows.find(r => r.event_type === 'checkout_started')?.total || 0;
+                    const wa = rows.find(r => r.event_type === 'whatsapp_order')?.total || 0;
+                    return `<div class="flex justify-between gap-2 border-b border-white/5 py-1"><span class="font-bold text-white">${day}</span><span>Visitas ${visits} · Agregados ${adds} · Checkout ${checkout} · WhatsApp ${wa}</span></div>`;
+                }).join('');
+
+                const dailyList = document.getElementById('ana-daily-list');
+                if(dailyList) dailyList.innerHTML = dailyHtml || 'Sin datos todavía';
+            } catch(e) {
+                const dbStatus = document.getElementById('ana-db-status');
+                if(dbStatus) {
+                    dbStatus.innerText = 'DB: falta analytics_daily';
+                    dbStatus.className = 'bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold';
+                }
+            }
+        }
+
         function resetLocalAnalytics() {
             if(confirm("¿Borrar estadísticas locales de este navegador?")) {
                 localStorage.removeItem('cg_analytics_events');
                 renderAnalyticsStats();
+                loadDailyAnalyticsStats();
             }
         }
 
