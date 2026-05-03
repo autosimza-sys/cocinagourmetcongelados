@@ -16,6 +16,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        @media (max-width: 768px) { body { padding-bottom: 76px; } }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         .btn-primary { background: linear-gradient(135deg, #10b981, #3b82f6); transition: all 0.3s; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
@@ -26,11 +27,26 @@
             background: #334155; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; margin-right: 1rem;
         }
 
-        .img-container { position: relative; overflow: hidden; padding-top: 68%; border-radius: 1rem; background: #1e293b; }
+        .img-container { position: relative; overflow: hidden; padding-top: 64%; border-radius: 1rem; background: #1e293b; }
         .img-container img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         
         .cart-sidebar { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .cart-sidebar.open { transform: translateX(0); }
+        @media (max-width: 768px) {
+            .cart-sidebar { width: 100vw !important; max-width: 100vw !important; left: 0 !important; right: 0 !important; }
+            .mobile-compact-hero { padding: 1.15rem !important; margin-bottom: 1.25rem !important; border-radius: 1.5rem !important; }
+            .mobile-compact-hero h1 { font-size: 2rem !important; line-height: 1.08 !important; margin-bottom: .75rem !important; }
+            .mobile-compact-hero .hero-sub { font-size: .95rem !important; line-height: 1.55 !important; margin-bottom: 1rem !important; }
+            .mobile-compact-hero .hero-promise { padding: 1rem !important; border-radius: 1.25rem !important; }
+            .mobile-compact-hero .hero-promise h3 { font-size: 1.15rem !important; margin-bottom: .65rem !important; }
+            .mobile-compact-hero .hero-promise ul { gap: .35rem !important; font-size: .86rem !important; }
+            .product-title { font-size: .88rem !important; line-height: 1.25 !important; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.35rem; }
+            .product-card { padding: .75rem !important; border-radius: 1.35rem !important; }
+            .product-actions button { height: 44px !important; padding: 0 .3rem !important; font-size: .82rem !important; border-radius: 1rem !important; }
+            .combo-card { padding: 1.05rem !important; border-radius: 1.5rem !important; }
+            .combo-card h3 { font-size: 1.1rem !important; }
+            .combo-card .combo-price { font-size: 2rem !important; }
+        }
 
         @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .pulse { animation: pulse-soft 2s infinite; }
@@ -103,13 +119,13 @@
     </div>
 
     <!-- Sidebar Carrito -->
-    <div id="cart-sidebar" class="cart-sidebar fixed right-0 top-0 h-full w-full max-w-md bg-slate-900 z-50 shadow-2xl flex flex-col border-l border-white/5">
-        <div class="p-6 border-b border-white/5 flex justify-between items-center">
+    <div id="cart-sidebar" class="cart-sidebar fixed right-0 top-0 h-full w-full md:max-w-md bg-slate-900 z-[90] shadow-2xl flex flex-col border-l border-white/5">
+        <div class="p-5 md:p-6 border-b border-white/5 flex justify-between items-center">
             <h2 class="text-xl font-bold">Mi Pedido</h2>
             <button onclick="toggleCart()" class="text-slate-400 text-2xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-        <div class="p-6 bg-slate-800/40 border-t border-white/10 space-y-4">
+        <div id="cart-items" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 md:space-y-4"></div>
+        <div class="p-4 md:p-6 bg-slate-800/40 border-t border-white/10 space-y-4">
             <div id="checkout-form" class="hidden space-y-3 pb-4">
                 <input type="text" id="cust-name" placeholder="Tu Nombre">
                 <input type="tel" id="cust-phone" placeholder="Tu WhatsApp / Teléfono">
@@ -142,27 +158,27 @@
         <!-- TIENDA -->
         <section id="view-shop">
             <!-- HERO COMERCIAL -->
-            <div class="hero-gradient glass rounded-[2rem] p-6 md:p-10 mb-10 border border-emerald-500/20">
+            <div class="hero-gradient glass rounded-[2rem] p-5 md:p-10 mb-8 border border-emerald-500/20 mobile-compact-hero">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                     <div>
-                        <p class="text-emerald-400 font-bold uppercase text-xs tracking-[0.25em] mb-3">Cocina Gourmet Congelados</p>
-                        <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">
+                        <p class="text-emerald-400 font-bold uppercase text-[10px] md:text-xs tracking-[0.22em] mb-2">Cocina Gourmet Congelados</p>
+                        <h1 class="text-3xl md:text-6xl font-extrabold leading-tight mb-3">
                             Comida lista en <span class="text-emerald-400">5 minutos</span>
                         </h1>
-                        <p class="text-slate-300 text-lg md:text-xl mb-6">
+                        <p class="text-slate-300 text-sm md:text-xl mb-4 hero-sub">
                             Pizzas, empanadas, tartines y viandas caseras para tener el freezer lleno y resolver almuerzos o cenas sin cocinar.
                         </p>
                         <div class="flex flex-col sm:flex-row gap-3">
-                            <button onclick="document.getElementById('products-grid').scrollIntoView({behavior:'smooth'}); trackEvent('hero_catalog_click')" class="btn-primary px-6 py-4 rounded-2xl font-bold text-white">
+                            <button onclick="document.getElementById('products-grid').scrollIntoView({behavior:'smooth'}); trackEvent('hero_catalog_click')" class="btn-primary px-5 py-3 md:px-6 md:py-4 rounded-2xl font-bold text-white">
                                 Ver catálogo
                             </button>
-                            <button onclick="toggleCart(); trackEvent('hero_cart_click')" class="bg-slate-800 hover:bg-slate-700 px-6 py-4 rounded-2xl font-bold text-white border border-white/10">
+                            <button onclick="toggleCart(); trackEvent('hero_cart_click')" class="bg-slate-800 hover:bg-slate-700 px-5 py-3 md:px-6 md:py-4 rounded-2xl font-bold text-white border border-white/10">
                                 Pedir por WhatsApp
                             </button>
                         </div>
                     </div>
-                    <div class="glass rounded-[2rem] p-6 border border-white/10">
-                        <h3 class="text-2xl font-extrabold mb-3">🔥 Promesa simple</h3>
+                    <div class="glass rounded-[2rem] p-4 md:p-6 border border-white/10 hero-promise">
+                        <h3 class="text-xl md:text-2xl font-extrabold mb-3">🔥 Promesa simple</h3>
                         <ul class="space-y-3 text-slate-300">
                             <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Comida casera congelada</li>
                             <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Lista para horno o calentar</li>
@@ -181,7 +197,7 @@
                         <h2 class="text-2xl md:text-3xl font-extrabold">Combos recomendados</h2>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
                     <div class="combo-card glass p-6 rounded-3xl border border-emerald-500/20">
                         <p class="text-[10px] text-emerald-400 uppercase font-bold tracking-widest mb-2">Más vendido</p>
                         <h3 class="text-xl font-extrabold mb-2">Combo Freezer</h3>
@@ -195,7 +211,7 @@
                                 <li>• Ideal para 5 a 7 comidas rápidas</li>
                             </ul>
                         </div>
-                        <p class="text-3xl font-extrabold text-emerald-400 mb-1">$97.000</p>
+                        <p class="combo-price text-3xl font-extrabold text-emerald-400 mb-1">$97.000</p>
                         <p class="text-xs text-slate-500 mb-5">Valor real estimado: $117.000</p>
                         <button onclick="addPresetCombo('combo_freezer')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
                     </div>
@@ -212,7 +228,7 @@
                                 <li>• Pensado para almuerzo o cena familiar</li>
                             </ul>
                         </div>
-                        <p class="text-3xl font-extrabold text-emerald-400 mb-1">$75.000</p>
+                        <p class="combo-price text-3xl font-extrabold text-emerald-400 mb-1">$75.000</p>
                         <p class="text-xs text-slate-500 mb-5">Ideal para almuerzo, cena y emergencia.</p>
                         <button onclick="addPresetCombo('combo_familiar')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
                     </div>
@@ -229,7 +245,7 @@
                                 <li>• Ideal para almacenes, hostels y comercios</li>
                             </ul>
                         </div>
-                        <p class="text-3xl font-extrabold text-emerald-400 mb-1">$125.000</p>
+                        <p class="combo-price text-3xl font-extrabold text-emerald-400 mb-1">$125.000</p>
                         <p class="text-xs text-slate-500 mb-5">Para consultar reposición y margen.</p>
                         <button onclick="addPresetCombo('combo_revendedor')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
                     </div>
@@ -246,7 +262,7 @@
 
             <div class="mb-8">
                 <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-4">
-                    <h2 class="text-3xl font-extrabold">Catálogo Gourmet</h2>
+                    <h2 class="text-2xl md:text-3xl font-extrabold">Catálogo Gourmet</h2>
                     <div class="relative w-full md:w-80">
                         <input
                             type="text"
@@ -261,7 +277,7 @@
                 <div id="search-result-text" class="hidden text-xs text-slate-400 mb-3"></div>
                 <div class="flex gap-2 overflow-x-auto pb-4" id="cat-list"></div>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5" id="products-grid"></div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" id="products-grid"></div>
         </section>
 
         <!-- ADMIN -->
@@ -438,10 +454,18 @@
     </div>
 
 
+
+    <!-- Botón fijo inferior para comprar en celular -->
+    <div id="bottom-buy-bar" class="fixed bottom-0 left-0 w-full bg-slate-950/95 border-t border-white/10 p-3 z-[70] md:hidden">
+        <button onclick="toggleCart()" class="w-full btn-primary py-3 rounded-2xl font-bold text-white text-sm shadow-xl">
+            🛒 Ver pedido / Comprar
+        </button>
+    </div>
+
     <!-- Botón flotante de consulta -->
     <button
         onclick="openGeneralConsult()"
-        class="fixed bottom-5 right-5 bg-emerald-500 hover:bg-emerald-400 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 z-50 font-bold border border-white/20"
+        class="fixed bottom-24 md:bottom-5 right-4 md:right-5 bg-emerald-500 hover:bg-emerald-400 text-white px-4 md:px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 z-[65] font-bold border border-white/20"
         title="Consultar por WhatsApp"
     >
         <i class="fa-brands fa-whatsapp text-xl"></i>
@@ -452,6 +476,7 @@
         // Valores por defecto
         const DEFAULT_URL = "https://peoimydvofprzemjvyzg.supabase.co";
         const DEFAULT_KEY = "sb_publishable_pq5tsxdZqiNJxiQg7R6YpQ_vshWWv7H";
+        const WHATSAPP_FIXED = "5492616668454";
 
         let sb = null;
         let products = [], categories = [], zones = [], cart = [], orders = [];
@@ -690,16 +715,16 @@
             }
 
             grid.innerHTML = filtered.map(p => `
-                <div class="glass p-3 md:p-4 rounded-2xl md:rounded-3xl flex flex-col group pop-in border border-white/5 hover:border-emerald-500/30 transition-all">
-                    <div class="img-container mb-4 shadow-xl">
+                <div class="glass product-card p-3 md:p-4 rounded-3xl flex flex-col group pop-in border border-white/5 hover:border-emerald-500/30 transition-all h-full">
+                    <div class="img-container mb-3 md:mb-4 shadow-xl">
                         <img src="${p.image_url || ''}" onerror="this.src='https://via.placeholder.com/400?text=Cocina+Gourmet'">
                     </div>
-                    <h3 class="font-bold mb-1 text-slate-100">${p.name}</h3>
+                    <h3 class="product-title font-bold mb-1 text-slate-100">${p.name}</h3>
                     ${(p.name || '').toLowerCase().includes('tartin') || (p.name || '').toLowerCase().includes('tartín') ? `<p class="text-xs text-slate-400 mb-2">Porción individual • Lista para calentar</p>` : ''}
-                    <p class="text-emerald-400 font-bold text-base md:text-xl mb-3">$${parseFloat(p.price).toLocaleString()}</p>
-                    <div class="grid grid-cols-2 gap-2 mt-auto">
-                        <button onclick="consultProduct('${p.id}')" class="bg-slate-800 hover:bg-slate-700 py-3 rounded-2xl font-bold text-white border border-white/10 text-sm">Consultar</button>
-                        <button onclick="addToCart('${p.id}')" class="btn-primary py-3 rounded-2xl font-bold text-white text-sm">Agregar</button>
+                    <p class="text-emerald-400 font-bold text-lg md:text-xl mb-3 md:mb-4">$${parseFloat(p.price).toLocaleString()}</p>
+                    <div class="product-actions grid grid-cols-2 gap-2 mt-auto">
+                        <button onclick="consultProduct('${p.id}')" class="w-full h-12 bg-slate-800 hover:bg-slate-700 rounded-2xl font-bold text-white border border-white/10 text-sm flex items-center justify-center">Consultar</button>
+                        <button onclick="addToCart('${p.id}')" class="w-full h-12 btn-primary rounded-2xl font-bold text-white text-sm flex items-center justify-center">Agregar</button>
                     </div>
                 </div>
             `).join('');
@@ -735,8 +760,7 @@
         }
 
         function getConsultWhatsapp() {
-            const zoneWithWa = zones.find(z => z.whatsapp);
-            return zoneWithWa ? zoneWithWa.whatsapp : '5492616668454';
+            return WHATSAPP_FIXED;
         }
 
         function openGeneralConsult() {
@@ -811,7 +835,12 @@
             const total = sub + shipping;
             document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
         }
-        function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('open'); }
+        function toggleCart() {
+            const sidebar = document.getElementById('cart-sidebar');
+            sidebar.classList.toggle('open');
+            const bottomBar = document.getElementById('bottom-buy-bar');
+            if(bottomBar) bottomBar.classList.toggle('hidden', sidebar.classList.contains('open'));
+        }
         function closeAddedModal() { document.getElementById('modal-added-confirm').classList.add('hidden'); }
 
         // --- ADMIN RENDERS ---
@@ -1043,7 +1072,7 @@
             }
 
             trackEvent('whatsapp_order', { total: totalNum, zone_name: zone.name, payment, customer_has_email: !!email, optin });
-            window.open(`https://wa.me/${zone.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+            window.open(`https://wa.me/${WHATSAPP_FIXED}?text=${encodeURIComponent(msg)}`, '_blank');
             
             // Cleanup
             cart = []; saveCart(); loadAllData(); toggleCart();
@@ -1058,13 +1087,5 @@
             alert("✅ ¡Pedido enviado correctamente!");
         }
     </script>
-
-    <!-- BOTON FIJO COMPRAR -->
-    <div class="fixed bottom-0 left-0 w-full bg-slate-900/95 backdrop-blur border-t border-white/10 p-3 z-50 md:hidden">
-        <button onclick="toggleCart()" class="w-full btn-primary py-3 rounded-xl font-bold text-white text-sm">
-            🛒 Ver pedido / Comprar
-        </button>
-    </div>
-
 </body>
 </html>
