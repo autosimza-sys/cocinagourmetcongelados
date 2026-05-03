@@ -477,7 +477,8 @@
         const DEFAULT_URL = "https://peoimydvofprzemjvyzg.supabase.co";
         const DEFAULT_KEY = "sb_publishable_pq5tsxdZqiNJxiQg7R6YpQ_vshWWv7H";
         const WHATSAPP_FIXED = "5492616668454";
-        const ADMIN_PASSWORD = "CG2026segura";
+        let ADMIN_PASSWORD = "";
+        const ADMIN_PASSWORD_CONFIG_KEY = "admin_password";
 
         let sb = null;
         let products = [], categories = [], zones = [], cart = [], orders = [];
@@ -529,6 +530,7 @@
                 const { error } = await sb.from('categories').select('id').limit(1);
                 if(error) throw error;
                 updateDBIndicator(true);
+                await loadAdminPasswordFromConfig();
                 loadAllData();
                 document.getElementById('stat-db-ping').innerText = "ACTIVA";
                 document.getElementById('stat-db-ping').className = "text-[10px] font-bold text-emerald-400 uppercase";
@@ -543,6 +545,27 @@
         function updateDBIndicator(success) {
             const dot = document.getElementById('db-status-dot');
             dot.className = `w-2 h-2 rounded-full pulse ${success ? 'bg-emerald-500' : 'bg-rose-500'}`;
+        }
+
+        async function loadAdminPasswordFromConfig() {
+            if(!sb) return;
+            try {
+                const { data, error } = await sb
+                    .from('config')
+                    .select('key,value')
+                    .eq('key', ADMIN_PASSWORD_CONFIG_KEY)
+                    .maybeSingle();
+
+                if(error) throw error;
+
+                ADMIN_PASSWORD = data && data.value ? String(data.value).trim() : '';
+                if(!ADMIN_PASSWORD) {
+                    console.warn('No se encontró admin_password en la tabla config.');
+                }
+            } catch(e) {
+                console.error('Error cargando contraseña admin desde Supabase:', e);
+                ADMIN_PASSWORD = '';
+            }
         }
 
         async function loadAllData() {
@@ -998,10 +1021,24 @@
             else document.getElementById('modal-admin-login').classList.remove('hidden');
         }
 
-        function attemptAdminLogin() {
-            if(document.getElementById('admin-password').value === ADMIN_PASSWORD) {
-                isViewAdminUnlocked = true; closeAdminLogin(); showView('admin');
-            } else alert("Contraseña de administrador incorrecta");
+        async function attemptAdminLogin() {
+            if(!ADMIN_PASSWORD) await loadAdminPasswordFromConfig();
+
+            const enteredPassword = document.getElementById('admin-password').value.trim();
+
+            if(!ADMIN_PASSWORD) {
+                alert("No se pudo cargar la contraseña desde la base de datos. Revisá la tabla config.");
+                return;
+            }
+
+            if(enteredPassword === ADMIN_PASSWORD) {
+                isViewAdminUnlocked = true;
+                document.getElementById('admin-password').value = '';
+                closeAdminLogin();
+                showView('admin');
+            } else {
+                alert("Contraseña de administrador incorrecta");
+            }
         }
 
         function closeAdminLogin() { document.getElementById('modal-admin-login').classList.add('hidden'); }
