@@ -10,267 +10,274 @@
     <meta property="og:title" content="Cocina Gourmet | Comida congelada en Mendoza">
     <meta property="og:description" content="Freezer lleno, semana resuelta. Pizzas, empanadas, tartines y viandas listas para calentar.">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.cocinagourmet.com.ar">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
-        @media (max-width: 768px) { body { padding-bottom: 76px; } }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .btn-primary { background: linear-gradient(135deg, #10b981, #3b82f6); transition: all 0.3s; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
-        input, select, textarea { background: #1e293b !important; border: 1px solid #334155 !important; color: white !important; padding: 0.75rem 1rem; border-radius: 0.75rem; width: 100%; outline: none; }
-        input:focus, select:focus { border-color: #10b981 !important; }
-        
-        input[type="file"]::file-selector-button {
-            background: #334155; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; margin-right: 1rem;
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800;900&display=swap');
+        :root {
+            --bg: #08111f;
+            --panel: rgba(15, 23, 42, .76);
+            --panel-strong: rgba(15, 23, 42, .95);
+            --line: rgba(255,255,255,.1);
+            --green: #10b981;
+            --blue: #38bdf8;
+            --amber: #f59e0b;
+            --rose: #fb7185;
         }
-
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background:
+                linear-gradient(rgba(8,17,31,.78), rgba(8,17,31,.94)),
+                url('https://images.unsplash.com/photo-1542010589005-d1eacc3918f2?auto=format&fit=crop&w=2200&q=80') center top / cover fixed;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        @media (max-width: 768px) { body { padding-bottom: 82px; background-attachment: scroll; } }
+        .glass { background: var(--panel); backdrop-filter: blur(16px); border: 1px solid var(--line); }
+        .glass-strong { background: var(--panel-strong); backdrop-filter: blur(16px); border: 1px solid var(--line); }
+        .btn-primary { background: linear-gradient(135deg, #059669, #2563eb); transition: all .22s ease; box-shadow: 0 18px 42px rgba(16,185,129,.18); }
+        .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.08); box-shadow: 0 24px 52px rgba(16,185,129,.28); }
+        .btn-dark { background: rgba(15,23,42,.88); border: 1px solid rgba(255,255,255,.1); transition: all .22s ease; }
+        .btn-dark:hover { background: rgba(30,41,59,.96); }
+        input, select, textarea {
+            background: #111827 !important;
+            border: 1px solid #334155 !important;
+            color: white !important;
+            padding: .82rem 1rem;
+            border-radius: .9rem;
+            width: 100%;
+            outline: none;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--green) !important; }
+        input[type="file"]::file-selector-button {
+            background: #334155; color: white; border: none; padding: .5rem 1rem; border-radius: .6rem; cursor: pointer; margin-right: 1rem;
+        }
+        .tag { border: 1px solid rgba(16,185,129,.24); background: rgba(16,185,129,.1); color: #6ee7b7; }
         .img-container { position: relative; overflow: hidden; padding-top: 64%; border-radius: 1rem; background: #1e293b; }
-        .img-container img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        
-        .cart-sidebar { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .img-container img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .cart-sidebar { transform: translateX(100%); transition: transform .35s cubic-bezier(.4,0,.2,1); }
         .cart-sidebar.open { transform: translateX(0); }
+        .sale-card { position: relative; overflow: hidden; }
+        .sale-card:before {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(16,185,129,.16), transparent 38%, rgba(56,189,248,.12));
+            pointer-events: none;
+        }
+        .stat-card { background: rgba(15,23,42,.58); border: 1px solid rgba(255,255,255,.08); border-radius: 1rem; padding: 1rem; }
+        .pulse { animation: pulse-soft 1.8s infinite; }
+        @keyframes pulse-soft { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.82); } }
+        .pop-in { animation: popIn .26s ease-out; }
+        @keyframes popIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        details summary { list-style: none; }
+        details summary::-webkit-details-marker { display: none; }
         @media (max-width: 768px) {
             .cart-sidebar { width: 100vw !important; max-width: 100vw !important; left: 0 !important; right: 0 !important; }
+            .hero-title { font-size: 2.35rem !important; line-height: 1.03 !important; }
             .mobile-compact-hero { padding: 1.15rem !important; margin-bottom: 1.25rem !important; border-radius: 1.5rem !important; }
-            .mobile-compact-hero h1 { font-size: 2rem !important; line-height: 1.08 !important; margin-bottom: .75rem !important; }
-            .mobile-compact-hero .hero-sub { font-size: .95rem !important; line-height: 1.55 !important; margin-bottom: 1rem !important; }
-            .mobile-compact-hero .hero-promise { padding: 1rem !important; border-radius: 1.25rem !important; }
-            .mobile-compact-hero .hero-promise h3 { font-size: 1.15rem !important; margin-bottom: .65rem !important; }
-            .mobile-compact-hero .hero-promise ul { gap: .35rem !important; font-size: .86rem !important; }
             .product-title { font-size: .88rem !important; line-height: 1.25 !important; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 3.35rem; }
             .product-card { padding: .75rem !important; border-radius: 1.35rem !important; }
-            .product-actions button { height: 44px !important; padding: 0 .3rem !important; font-size: .82rem !important; border-radius: 1rem !important; }
+            .product-actions button { height: 44px !important; padding: 0 .3rem !important; font-size: .8rem !important; border-radius: 1rem !important; }
             .combo-card { padding: 1.05rem !important; border-radius: 1.5rem !important; }
-            .combo-card h3 { font-size: 1.1rem !important; }
-            .combo-card .combo-price { font-size: 2rem !important; }
         }
-
-        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .pulse { animation: pulse-soft 2s infinite; }
-
-        .pop-in { animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
-        @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        .hero-gradient { background: radial-gradient(circle at top left, rgba(16,185,129,.30), transparent 35%), radial-gradient(circle at bottom right, rgba(59,130,246,.25), transparent 30%), rgba(15,23,42,.75); }
-        .combo-card { position: relative; overflow: hidden; }
-        .combo-card:before { content: ""; position: absolute; inset: -40%; background: radial-gradient(circle, rgba(16,185,129,.12), transparent 55%); transform: rotate(12deg); pointer-events: none; }
-        .stat-card { background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; padding: 1rem; }
     </style>
 </head>
 <body>
+    <div class="bg-emerald-500 text-slate-950 text-center text-xs md:text-sm font-black px-3 py-2">
+        Hoy: armá tu pedido y dejá comidas listas para toda la semana. Confirmación directa por WhatsApp.
+    </div>
 
-    <!-- Navegación -->
-    <nav class="glass sticky top-0 z-40 px-4 md:px-8 py-4 flex justify-between items-center border-b border-white/5">
-        <div class="flex items-center gap-3 cursor-pointer" onclick="showView('shop')">
-            <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center font-bold text-lg text-white">CG</div>
+    <nav class="glass-strong sticky top-0 z-40 px-4 md:px-8 py-4 flex justify-between items-center border-b border-white/5">
+        <button class="flex items-center gap-3 cursor-pointer text-left" onclick="showView('shop')">
+            <div class="w-11 h-11 bg-emerald-600 rounded-2xl flex items-center justify-center font-black text-lg text-white">CG</div>
             <div>
                 <div class="flex items-center gap-2">
-                    <h1 class="font-bold leading-none">Cocina Gourmet</h1>
-                    <div id="db-status-dot" class="w-2 h-2 rounded-full bg-rose-500 pulse" title="Estado de Conexión"></div>
+                    <h1 class="font-black leading-none">Cocina Gourmet</h1>
+                    <div id="db-status-dot" class="w-2 h-2 rounded-full bg-rose-500 pulse" title="Estado de conexión"></div>
                 </div>
-                <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-tighter">Frozen Premium</span>
+                <span class="text-[10px] text-emerald-400 font-black uppercase tracking-[.14em]">Congelados Mendoza</span>
             </div>
-        </div>
-        <div class="flex items-center gap-3">
+        </button>
+        <div class="flex items-center gap-2 md:gap-3">
             <div class="relative hidden md:block w-64">
-                <input
-                    type="text"
-                    id="search-input"
-                    placeholder="Buscar productos..."
-                    oninput="handleSearchInput(this.value)"
-                    class="!py-2 !pl-10 !pr-3 text-sm"
-                >
+                <input type="text" id="search-input" placeholder="Buscar productos..." oninput="handleSearchInput(this.value)" class="!py-2 !pl-10 !pr-3 text-sm">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
             </div>
             <button onclick="focusSearch()" class="p-2 text-slate-400 hover:text-white transition-all" title="Buscar productos"><i class="fa-solid fa-magnifying-glass text-xl"></i></button>
-            <button onclick="showView('shop')" class="p-2 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-house text-xl"></i></button>
-            <button onclick="checkAdminAccess()" class="p-2 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-user-gear text-xl"></i></button>
-            <button onclick="toggleCart()" class="relative bg-slate-800 p-3 rounded-xl hover:bg-slate-700 transition-all">
+            <button onclick="showView('shop')" class="p-2 text-slate-400 hover:text-white transition-all" title="Tienda"><i class="fa-solid fa-house text-xl"></i></button>
+            <button onclick="checkAdminAccess()" class="p-2 text-slate-400 hover:text-white transition-all" title="Admin"><i class="fa-solid fa-user-gear text-xl"></i></button>
+            <button onclick="toggleCart()" class="relative btn-dark p-3 rounded-xl">
                 <i class="fa-solid fa-basket-shopping text-emerald-400 text-xl"></i>
                 <span id="cart-count" class="absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
             </button>
         </div>
     </nav>
 
-    <!-- Modales -->
     <div id="modal-added-confirm" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-        <div class="glass p-8 rounded-3xl w-full max-sm border border-white/10 text-center pop-in">
+        <div class="glass-strong p-8 rounded-3xl w-full max-w-sm text-center pop-in">
             <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl"><i class="fa-solid fa-check"></i></div>
-            <h3 class="text-xl font-bold mb-1">¡Agregado!</h3>
+            <h3 class="text-xl font-black mb-1">Agregado al pedido</h3>
             <p id="added-product-name" class="text-slate-400 text-sm mb-6"></p>
             <div class="space-y-3">
-                <button onclick="toggleCart(); closeAddedModal();" class="w-full btn-primary py-3 rounded-xl font-bold text-white">Terminar Compra</button>
-                <button onclick="closeAddedModal()" class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-bold text-slate-300">Seguir Comprando</button>
+                <button onclick="toggleCart(true); closeAddedModal();" class="w-full btn-primary py-3 rounded-xl font-black text-white">Terminar compra</button>
+                <button onclick="closeAddedModal()" class="w-full btn-dark py-3 rounded-xl font-black text-slate-300">Seguir comprando</button>
             </div>
         </div>
     </div>
 
     <div id="modal-admin-login" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
-        <div class="glass p-8 rounded-3xl w-full max-w-sm border border-white/10 text-center">
-            <h3 class="text-xl font-bold mb-6">Acceso Admin</h3>
-            <input type="password" id="admin-password" placeholder="Contraseña" class="mb-4 text-center tracking-widest">
+        <div class="glass-strong p-8 rounded-3xl w-full max-w-sm text-center">
+            <h3 class="text-xl font-black mb-2">Acceso Admin</h3>
+            <p class="text-xs text-slate-400 mb-5">La contraseña se lee desde Supabase, tabla config.</p>
+            <input type="password" id="admin-password" placeholder="Contraseña" class="mb-4 text-center tracking-widest" onkeydown="if(event.key==='Enter') attemptAdminLogin()">
             <div class="flex gap-2">
-                <button onclick="attemptAdminLogin()" class="flex-1 btn-primary py-3 rounded-xl font-bold text-white">Entrar</button>
-                <button onclick="closeAdminLogin()" class="px-4 bg-slate-700 py-3 rounded-xl font-bold text-white">Cerrar</button>
+                <button onclick="attemptAdminLogin()" class="flex-1 btn-primary py-3 rounded-xl font-black text-white">Entrar</button>
+                <button onclick="closeAdminLogin()" class="px-4 btn-dark py-3 rounded-xl font-black text-white">Cerrar</button>
             </div>
         </div>
     </div>
 
-    <!-- Sidebar Carrito -->
-    <div id="cart-sidebar" class="cart-sidebar fixed right-0 top-0 h-full w-full md:max-w-md bg-slate-900 z-[90] shadow-2xl flex flex-col border-l border-white/5">
-        <div class="p-5 md:p-6 border-b border-white/5 flex justify-between items-center">
-            <h2 class="text-xl font-bold">Mi Pedido</h2>
-            <button onclick="toggleCart()" class="text-slate-400 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+    <div id="cart-sidebar" class="cart-sidebar fixed right-0 top-0 h-full w-full md:max-w-md bg-slate-950 z-[90] shadow-2xl flex flex-col border-l border-white/10">
+        <div class="p-5 md:p-6 border-b border-white/10 flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-black">Mi pedido</h2>
+                <p class="text-xs text-slate-400">Último paso: confirmar por WhatsApp</p>
+            </div>
+            <button onclick="toggleCart(false)" class="text-slate-400 text-2xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="cart-items" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 md:space-y-4"></div>
-        <div class="p-4 md:p-6 bg-slate-800/40 border-t border-white/10 space-y-4">
+        <div class="p-4 md:p-6 bg-slate-900 border-t border-white/10 space-y-4">
             <div id="checkout-form" class="hidden space-y-3 pb-4">
-                <input type="text" id="cust-name" placeholder="Tu Nombre">
+                <input type="text" id="cust-name" placeholder="Tu nombre">
                 <input type="tel" id="cust-phone" placeholder="Tu WhatsApp / Teléfono">
                 <input type="email" id="cust-email" placeholder="Email (opcional)">
                 <input type="text" id="cust-address" placeholder="Dirección de entrega">
-                <select id="cust-zone" onchange="calculateFinalTotal(); trackEvent('zone_selected', { zone_id: this.value });"></select>
-                <select id="cust-payment" onchange="updatePaymentUI(); trackEvent('payment_selected', { payment: this.value });">
+                <select id="cust-zone" onchange="calculateFinalTotal(); trackZoneSelected();"></select>
+                <select id="cust-payment" onchange="updatePaymentUI()">
                     <option value="efectivo">Efectivo al recibir</option>
-                    <option value="transferencia">Transferencia Bancaria</option>
+                    <option value="transferencia">Transferencia bancaria</option>
                 </select>
                 <label class="flex items-start gap-2 text-[11px] text-slate-400 leading-tight">
                     <input type="checkbox" id="cust-optin" class="mt-1 !w-auto">
                     Acepto recibir promociones y novedades de Cocina Gourmet por WhatsApp o email.
                 </label>
                 <div id="bank-data" class="hidden p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-400">
-                    <p class="font-bold mb-1 text-white">Datos para Transferencia:</p>
+                    <p class="font-bold mb-1 text-white">Datos para transferencia:</p>
                     <div id="bank-info-txt" class="whitespace-pre-line text-slate-300"></div>
                 </div>
             </div>
-            <div class="flex justify-between items-center text-xl font-bold">
+            <div class="flex justify-between items-center text-xl font-black">
                 <span>Total:</span>
                 <span id="cart-total" class="text-emerald-400">$0</span>
             </div>
-            <button id="btn-next" onclick="showCheckout()" class="w-full btn-primary py-4 rounded-2xl font-bold text-white">Siguiente</button>
-            <button id="btn-submit" onclick="processOrder()" class="hidden w-full btn-primary py-4 rounded-2xl font-bold text-white">CONFIRMAR WHATSAPP</button>
+            <button id="btn-next" onclick="showCheckout()" class="w-full btn-primary py-4 rounded-2xl font-black text-white">Siguiente</button>
+            <button id="btn-submit" onclick="processOrder()" class="hidden w-full btn-primary py-4 rounded-2xl font-black text-white"><i class="fa-brands fa-whatsapp mr-2"></i>Confirmar WhatsApp</button>
         </div>
     </div>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
-        <!-- TIENDA -->
         <section id="view-shop">
-            <!-- HERO COMERCIAL -->
-            <div class="hero-gradient glass rounded-[2rem] p-5 md:p-10 mb-8 border border-emerald-500/20 mobile-compact-hero">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div class="glass rounded-[2rem] p-5 md:p-10 mb-8 border border-emerald-500/20 mobile-compact-hero sale-card">
+                <div class="relative z-10 grid grid-cols-1 lg:grid-cols-[1.1fr_.9fr] gap-8 items-center">
                     <div>
-                        <p class="text-emerald-400 font-bold uppercase text-[10px] md:text-xs tracking-[0.22em] mb-2">Cocina Gourmet Congelados</p>
-                        <h1 class="text-3xl md:text-6xl font-extrabold leading-tight mb-3">
-                            Comida lista en <span class="text-emerald-400">5 minutos</span>
-                        </h1>
-                        <p class="text-slate-300 text-sm md:text-xl mb-4 hero-sub">
-                            Pizzas, empanadas, tartines y viandas caseras para tener el freezer lleno y resolver almuerzos o cenas sin cocinar.
+                        <p class="inline-flex tag rounded-full px-4 py-2 text-[10px] md:text-xs font-black uppercase tracking-[.2em] mb-4">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 mt-1 pulse"></span> Producción limitada por tanda
                         </p>
+                        <h1 class="hero-title text-4xl md:text-7xl font-black leading-[.98] mb-4">
+                            Freezer lleno, <span class="text-emerald-400">semana resuelta</span>.
+                        </h1>
+                        <p class="text-slate-200 text-sm md:text-xl mb-5 leading-relaxed">
+                            Pizzas, empanadas, tartines y viandas caseras congeladas para comer rico sin cocinar. Pedís en minutos, calentás cuando querés.
+                        </p>
+                        <div class="grid grid-cols-3 gap-3 mb-6">
+                            <div class="bg-slate-950/45 border border-white/10 rounded-2xl p-3 md:p-4">
+                                <strong class="text-xl md:text-2xl">5 min</strong>
+                                <span class="block text-[10px] text-slate-400 font-bold">comida lista</span>
+                            </div>
+                            <div class="bg-slate-950/45 border border-white/10 rounded-2xl p-3 md:p-4">
+                                <strong class="text-xl md:text-2xl">Mza</strong>
+                                <span class="block text-[10px] text-slate-400 font-bold">envío por zona</span>
+                            </div>
+                            <div class="bg-slate-950/45 border border-white/10 rounded-2xl p-3 md:p-4">
+                                <strong class="text-xl md:text-2xl">WA</strong>
+                                <span class="block text-[10px] text-slate-400 font-bold">pedido directo</span>
+                            </div>
+                        </div>
                         <div class="flex flex-col sm:flex-row gap-3">
-                            <button onclick="document.getElementById('products-grid').scrollIntoView({behavior:'smooth'}); trackEvent('hero_catalog_click')" class="btn-primary px-5 py-3 md:px-6 md:py-4 rounded-2xl font-bold text-white">
-                                Ver catálogo
+                            <button onclick="document.getElementById('combos').scrollIntoView({behavior:'smooth'}); trackEvent('product_click', 'hero_ver_combos')" class="btn-primary px-5 py-3 md:px-6 md:py-4 rounded-2xl font-black text-white">
+                                Ver combos con ahorro
                             </button>
-                            <button onclick="toggleCart(); trackEvent('hero_cart_click')" class="bg-slate-800 hover:bg-slate-700 px-5 py-3 md:px-6 md:py-4 rounded-2xl font-bold text-white border border-white/10">
-                                Pedir por WhatsApp
+                            <button onclick="openGeneralConsult()" class="btn-dark px-5 py-3 md:px-6 md:py-4 rounded-2xl font-black text-white">
+                                <i class="fa-brands fa-whatsapp text-emerald-400 mr-2"></i>Pedir recomendación
                             </button>
                         </div>
                     </div>
-                    <div class="glass rounded-[2rem] p-4 md:p-6 border border-white/10 hero-promise">
-                        <h3 class="text-xl md:text-2xl font-extrabold mb-3">🔥 Promesa simple</h3>
-                        <ul class="space-y-3 text-slate-300">
-                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Comida casera congelada</li>
-                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Lista para horno o calentar</li>
-                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Ideal para familias, comercios y freezer</li>
-                            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Pedido directo por WhatsApp</li>
-                        </ul>
+                    <div class="glass-strong rounded-[2rem] overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=80" alt="Pizza casera congelada Cocina Gourmet" class="w-full h-64 md:h-80 object-cover">
+                        <div class="p-5">
+                            <p class="text-emerald-400 font-black text-xs uppercase tracking-widest mb-2">Venta inteligente</p>
+                            <h2 class="text-2xl font-black mb-2">No compres para hoy. Comprá para no cocinar en la semana.</h2>
+                            <p class="text-slate-400 text-sm">La oferta fuerte es tranquilidad: freezer con comidas reales, listas para calentar.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- COMBOS -->
-            <div class="mb-10">
-                <div class="flex justify-between items-end mb-4">
+            <div id="combos" class="mb-10">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-3 mb-4">
                     <div>
-                        <p class="text-emerald-400 font-bold uppercase text-[10px] tracking-widest">Comprá mejor</p>
-                        <h2 class="text-2xl md:text-3xl font-extrabold">Combos recomendados</h2>
+                        <p class="text-emerald-400 font-black uppercase text-[10px] tracking-widest">Comprá mejor</p>
+                        <h2 class="text-2xl md:text-4xl font-black">Combos que empujan la compra</h2>
                     </div>
+                    <p class="text-slate-400 text-sm max-w-lg">Armados para que el cliente no piense de más: elige el objetivo, compra y llena el freezer.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
-                    <div class="combo-card glass p-6 rounded-3xl border border-emerald-500/20">
-                        <p class="text-[10px] text-emerald-400 uppercase font-bold tracking-widest mb-2">Más vendido</p>
-                        <h3 class="text-xl font-extrabold mb-2">Combo Freezer</h3>
-                        <p class="text-slate-400 text-sm mb-4">Para llenar el freezer y resolver la semana.</p>
-                        <div class="bg-slate-950/35 rounded-2xl p-4 mb-4 border border-white/5">
-                            <p class="text-[10px] uppercase font-bold text-slate-500 mb-2">Incluye</p>
-                            <ul class="text-sm text-slate-300 space-y-1">
-                                <li>• 3 pizzas muzzarella grandes</li>
-                                <li>• 2 packs de empanadas x6</li>
-                                <li>• 2 tartines individuales a elección</li>
-                                <li>• Ideal para 5 a 7 comidas rápidas</li>
-                            </ul>
-                        </div>
-                        <p class="combo-price text-3xl font-extrabold text-emerald-400 mb-1">$97.000</p>
-                        <p class="text-xs text-slate-500 mb-5">Valor real estimado: $117.000</p>
-                        <button onclick="addPresetCombo('combo_freezer')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5" id="preset-combos-grid"></div>
+            </div>
+
+            <div class="glass rounded-3xl p-5 md:p-6 mb-10 border border-white/5">
+                <div class="grid lg:grid-cols-[.8fr_1.2fr] gap-5 items-center">
+                    <div>
+                        <p class="text-rose-300 text-xs font-black uppercase tracking-widest">Oferta de cierre</p>
+                        <h2 class="text-2xl md:text-4xl font-black leading-tight">Freezer cargado = menos delivery caro.</h2>
                     </div>
-                    <div class="combo-card glass p-6 rounded-3xl border border-blue-500/20">
-                        <p class="text-[10px] text-blue-400 uppercase font-bold tracking-widest mb-2">Para compartir</p>
-                        <h3 class="text-xl font-extrabold mb-2">Combo Familiar</h3>
-                        <p class="text-slate-400 text-sm mb-4">Una compra práctica para varias comidas.</p>
-                        <div class="bg-slate-950/35 rounded-2xl p-4 mb-4 border border-white/5">
-                            <p class="text-[10px] uppercase font-bold text-slate-500 mb-2">Incluye</p>
-                            <ul class="text-sm text-slate-300 space-y-1">
-                                <li>• 2 pizzas grandes</li>
-                                <li>• 2 packs de empanadas x6</li>
-                                <li>• 2 tartines individuales</li>
-                                <li>• Pensado para almuerzo o cena familiar</li>
-                            </ul>
-                        </div>
-                        <p class="combo-price text-3xl font-extrabold text-emerald-400 mb-1">$75.000</p>
-                        <p class="text-xs text-slate-500 mb-5">Ideal para almuerzo, cena y emergencia.</p>
-                        <button onclick="addPresetCombo('combo_familiar')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
-                    </div>
-                    <div class="combo-card glass p-6 rounded-3xl border border-purple-500/20">
-                        <p class="text-[10px] text-purple-400 uppercase font-bold tracking-widest mb-2">Negocio</p>
-                        <h3 class="text-xl font-extrabold mb-2">Combo Revendedor</h3>
-                        <p class="text-slate-400 text-sm mb-4">Pensado para comercios, hostels y ventas rápidas.</p>
-                        <div class="bg-slate-950/35 rounded-2xl p-4 mb-4 border border-white/5">
-                            <p class="text-[10px] uppercase font-bold text-slate-500 mb-2">Incluye</p>
-                            <ul class="text-sm text-slate-300 space-y-1">
-                                <li>• Mix inicial de productos congelados</li>
-                                <li>• Pizzas, empanadas y tartines</li>
-                                <li>• Productos fáciles de cocinar y revender</li>
-                                <li>• Ideal para almacenes, hostels y comercios</li>
-                            </ul>
-                        </div>
-                        <p class="combo-price text-3xl font-extrabold text-emerald-400 mb-1">$125.000</p>
-                        <p class="text-xs text-slate-500 mb-5">Para consultar reposición y margen.</p>
-                        <button onclick="addPresetCombo('combo_revendedor')" class="btn-primary w-full py-3 rounded-2xl font-bold text-white">Agregar combo</button>
+                    <div class="grid sm:grid-cols-3 gap-3">
+                        <button onclick="quickGoal('familia')" class="btn-dark rounded-2xl p-4 text-left">
+                            <i class="fa-solid fa-people-roof text-emerald-400 text-xl mb-2"></i>
+                            <strong class="block">Tengo familia</strong>
+                            <span class="text-xs text-slate-400">Cantidad recomendada</span>
+                        </button>
+                        <button onclick="quickGoal('trabajo')" class="btn-dark rounded-2xl p-4 text-left">
+                            <i class="fa-solid fa-briefcase text-blue-300 text-xl mb-2"></i>
+                            <strong class="block">Como rápido</strong>
+                            <span class="text-xs text-slate-400">Viandas y porciones</span>
+                        </button>
+                        <button onclick="quickGoal('negocio')" class="btn-dark rounded-2xl p-4 text-left">
+                            <i class="fa-solid fa-store text-amber-300 text-xl mb-2"></i>
+                            <strong class="block">Tengo negocio</strong>
+                            <span class="text-xs text-slate-400">Mayorista/reventa</span>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- TEXTO SEO VISIBLE -->
             <div class="glass rounded-3xl p-5 md:p-6 mb-10 border border-white/5">
-                <h2 class="text-xl font-bold mb-2">Comida congelada en Mendoza</h2>
+                <h2 class="text-xl font-black mb-2">Comida congelada en Mendoza</h2>
                 <p class="text-slate-400 text-sm leading-relaxed">
                     En Cocina Gourmet preparás tu pedido online de pizzas congeladas, empanadas, tartines y viandas caseras. Comprás fácil, elegís tu zona de envío y confirmás el pedido por WhatsApp.
                 </p>
             </div>
 
-            <div class="mb-8">
+            <div class="mb-8" id="catalogo">
                 <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-4">
-                    <h2 class="text-2xl md:text-3xl font-extrabold">Catálogo Gourmet</h2>
-                    <div class="relative w-full md:w-80">
-                        <input
-                            type="text"
-                            id="search-input-mobile"
-                            placeholder="Buscar pizzas, empanadas, viandas..."
-                            oninput="handleSearchInput(this.value)"
-                            class="!py-3 !pl-10 !pr-3 text-sm"
-                        >
+                    <div>
+                        <p class="text-emerald-400 font-black uppercase text-[10px] tracking-widest">Catálogo</p>
+                        <h2 class="text-2xl md:text-4xl font-black">Sumá productos al pedido</h2>
+                    </div>
+                    <div class="relative w-full md:w-96">
+                        <input type="text" id="search-input-mobile" placeholder="Buscar pizzas, empanadas, viandas..." oninput="handleSearchInput(this.value)" class="!py-3 !pl-10 !pr-3 text-sm">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-4 text-slate-400 text-sm"></i>
                     </div>
                 </div>
@@ -278,142 +285,160 @@
                 <div class="flex gap-2 overflow-x-auto pb-4" id="cat-list"></div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" id="products-grid"></div>
+
+            <div class="grid md:grid-cols-3 gap-4 mt-12" id="confianza">
+                <div class="glass rounded-3xl p-6">
+                    <div class="text-amber-300 mb-3">★★★★★</div>
+                    <p class="text-slate-200 font-bold mb-4">"Me salvó la semana. Llegué tarde, horno y cena lista."</p>
+                    <p class="text-xs text-slate-500 font-black uppercase">Cliente de Godoy Cruz</p>
+                </div>
+                <div class="glass rounded-3xl p-6">
+                    <div class="text-amber-300 mb-3">★★★★★</div>
+                    <p class="text-slate-200 font-bold mb-4">"Las empanadas salen bárbaras y tener packs congelados es comodísimo."</p>
+                    <p class="text-xs text-slate-500 font-black uppercase">Cliente de Ciudad</p>
+                </div>
+                <div class="glass rounded-3xl p-6">
+                    <div class="text-amber-300 mb-3">★★★★★</div>
+                    <p class="text-slate-200 font-bold mb-4">"Compré combo familiar y realmente dura. Volví a pedir."</p>
+                    <p class="text-xs text-slate-500 font-black uppercase">Cliente de Guaymallén</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-[.8fr_1.2fr] gap-6 mt-10 mb-8">
+                <div>
+                    <p class="text-emerald-400 text-xs font-black uppercase tracking-[.2em]">Sin objeciones</p>
+                    <h2 class="text-3xl md:text-4xl font-black">Preguntas antes de comprar</h2>
+                </div>
+                <div class="grid gap-3">
+                    <details class="glass rounded-2xl p-5" open>
+                        <summary class="font-black cursor-pointer">¿Cómo hago el pedido?</summary>
+                        <p class="text-slate-400 text-sm mt-3">Agregás productos, completás tus datos y se arma un mensaje listo para enviar por WhatsApp.</p>
+                    </details>
+                    <details class="glass rounded-2xl p-5">
+                        <summary class="font-black cursor-pointer">¿Se entrega en todo Mendoza?</summary>
+                        <p class="text-slate-400 text-sm mt-3">Se coordina por zona. Al confirmar el pedido te respondemos disponibilidad, costo y horario de entrega.</p>
+                    </details>
+                    <details class="glass rounded-2xl p-5">
+                        <summary class="font-black cursor-pointer">¿Puedo pedir para negocio?</summary>
+                        <p class="text-slate-400 text-sm mt-3">Sí. El combo revendedor abre la conversación para comercios, hostels, almacenes y reposición.</p>
+                    </details>
+                </div>
+            </div>
         </section>
 
-        <!-- ADMIN -->
         <section id="view-admin" class="hidden">
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h2 class="text-2xl font-bold text-white">Panel de Control</h2>
+                    <h2 class="text-2xl md:text-4xl font-black text-white">Panel de Control</h2>
                     <p id="admin-status-text" class="text-xs text-slate-400">Administración de la tienda</p>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="loadAllData()" class="bg-slate-800 p-2 rounded-lg text-slate-400 hover:text-white" title="Recargar Datos"><i class="fa-solid fa-rotate"></i></button>
-                    <button onclick="logoutAdmin()" class="bg-slate-800 px-4 py-2 rounded-lg text-xs font-bold hover:bg-rose-500/20 hover:text-rose-400 transition-all">Cerrar Sesión</button>
+                    <button onclick="loadAllData()" class="btn-dark p-3 rounded-xl text-slate-300" title="Recargar datos"><i class="fa-solid fa-rotate"></i></button>
+                    <button onclick="logoutAdmin()" class="btn-dark px-4 py-2 rounded-xl text-xs font-black hover:text-rose-300">Cerrar sesión</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <div class="glass p-4 rounded-2xl border-l-4 border-emerald-500">
-                    <p class="text-[10px] uppercase font-bold text-slate-400">Ventas Hoy</p>
-                    <h4 id="stat-orders-today" class="text-2xl font-bold">0</h4>
+                    <p class="text-[10px] uppercase font-black text-slate-400">Ventas hoy</p>
+                    <h4 id="stat-orders-today" class="text-2xl font-black">0</h4>
                 </div>
                 <div class="glass p-4 rounded-2xl border-l-4 border-blue-500">
-                    <p class="text-[10px] uppercase font-bold text-slate-400">Productos</p>
-                    <h4 id="stat-products" class="text-2xl font-bold">0</h4>
+                    <p class="text-[10px] uppercase font-black text-slate-400">Productos</p>
+                    <h4 id="stat-products" class="text-2xl font-black">0</h4>
                 </div>
                 <div class="glass p-4 rounded-2xl border-l-4 border-purple-500">
-                    <p class="text-[10px] uppercase font-bold text-slate-400">Categorías</p>
-                    <h4 id="stat-cats" class="text-2xl font-bold">0</h4>
+                    <p class="text-[10px] uppercase font-black text-slate-400">Categorías</p>
+                    <h4 id="stat-cats" class="text-2xl font-black">0</h4>
                 </div>
                 <div class="glass p-4 rounded-2xl border-l-4 border-orange-500">
-                    <p class="text-[10px] uppercase font-bold text-slate-400">Conexión</p>
-                    <h4 id="stat-db-ping" class="text-[10px] font-bold text-emerald-400 uppercase">VERIFICANDO</h4>
+                    <p class="text-[10px] uppercase font-black text-slate-400">Conexión</p>
+                    <h4 id="stat-db-ping" class="text-[10px] font-black text-emerald-400 uppercase">Verificando</h4>
                 </div>
             </div>
-            
+
             <div class="glass p-6 rounded-2xl mb-8 border border-purple-500/20">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                     <div>
-                        <h3 class="font-bold text-purple-400 flex items-center gap-2"><i class="fa-solid fa-chart-line"></i> Estadísticas de navegación</h3>
-                        <p class="text-xs text-slate-500">Guarda estadísticas por día en Supabase usando la tabla analytics_daily. Si la tabla todavía no existe, sigue midiendo localmente en este navegador.</p>
+                        <h3 class="font-black text-purple-300 flex items-center gap-2"><i class="fa-solid fa-chart-line"></i> Estadísticas por día</h3>
+                        <p class="text-xs text-slate-500">Usa la tabla analytics_daily. Si no existe, sigue midiendo localmente y muestra aviso.</p>
                     </div>
                     <div class="flex flex-col md:flex-row gap-2">
-                        <span id="ana-db-status" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">DB: verificando</span>
-                        <button onclick="resetLocalAnalytics()" class="bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">Reiniciar estadísticas locales</button>
+                        <span id="ana-db-status" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-black">DB: verificando</span>
+                        <button onclick="resetLocalAnalytics()" class="btn-dark text-slate-300 px-4 py-2 rounded-xl text-xs font-black">Reiniciar estadísticas locales</button>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
-                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-bold">Visitas</p><h4 id="ana-visits" class="text-2xl font-bold">0</h4></div>
-                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-bold">Agregados</p><h4 id="ana-adds" class="text-2xl font-bold">0</h4></div>
-                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-bold">Checkout</p><h4 id="ana-checkout" class="text-2xl font-bold">0</h4></div>
-                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-bold">WhatsApp</p><h4 id="ana-whatsapp" class="text-2xl font-bold">0</h4></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-black">Visitas hoy</p><h4 id="ana-visits" class="text-2xl font-black">0</h4></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-black">Búsquedas</p><h4 id="ana-searches" class="text-2xl font-black">0</h4></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-black">Agregados</p><h4 id="ana-adds" class="text-2xl font-black">0</h4></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-black">WhatsApp</p><h4 id="ana-whatsapp" class="text-2xl font-black">0</h4></div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div class="stat-card">
-                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-2">Producto más agregado</p>
-                        <p id="ana-top-product" class="font-bold text-white">Sin datos</p>
-                    </div>
-                    <div class="stat-card">
-                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-2">Zona más elegida</p>
-                        <p id="ana-top-zone" class="font-bold text-white">Sin datos</p>
-                    </div>
-                    <div class="stat-card">
-                        <p class="text-[10px] uppercase text-slate-500 font-bold mb-2">Origen</p>
-                        <p id="ana-referrer" class="font-bold text-white">Directo / sin datos</p>
-                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-black mb-2">Producto más consultado</p><p id="ana-top-consult" class="font-black text-white">Sin datos</p></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-black mb-2">Producto más agregado</p><p id="ana-top-product" class="font-black text-white">Sin datos</p></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-black mb-2">Combo más usado</p><p id="ana-top-combo" class="font-black text-white">Sin datos</p></div>
+                    <div class="stat-card"><p class="text-[10px] uppercase text-slate-500 font-black mb-2">Zona más elegida</p><p id="ana-top-zone" class="font-black text-white">Sin datos</p></div>
                 </div>
                 <div class="stat-card mt-4 text-sm">
-                    <p class="text-[10px] uppercase text-slate-500 font-bold mb-2">Resumen por día guardado en base</p>
+                    <p class="text-[10px] uppercase text-slate-500 font-black mb-2">Resumen por día guardado en base</p>
                     <div id="ana-daily-list" class="space-y-1 text-slate-300">Sin datos todavía</div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 space-y-6">
-                    <!-- ÚLTIMOS PEDIDOS -->
                     <div class="glass p-6 rounded-2xl">
-                        <h3 class="font-bold text-emerald-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-receipt"></i> Últimos Pedidos</h3>
+                        <h3 class="font-black text-emerald-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-receipt"></i> Últimos pedidos</h3>
                         <div id="admin-orders" class="space-y-3 max-h-[400px] overflow-y-auto"></div>
                     </div>
-
-                    <!-- PRODUCTOS -->
                     <div class="glass p-6 rounded-2xl">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-box"></i> Productos</h3>
-                            <button onclick="openProductModal()" class="bg-emerald-600 px-3 py-2 rounded-lg text-xs font-bold text-white">+ Nuevo Producto</button>
+                            <h3 class="font-black text-emerald-400 flex items-center gap-2"><i class="fa-solid fa-box"></i> Productos</h3>
+                            <button onclick="openProductModal()" class="bg-emerald-600 px-3 py-2 rounded-lg text-xs font-black text-white">+ Nuevo producto</button>
                         </div>
                         <div id="admin-products" class="space-y-2"></div>
                     </div>
-                    
-                    <!-- CONFIGURACIÓN AVANZADA -->
                     <div class="glass p-6 rounded-2xl border border-blue-500/20">
-                        <h3 class="font-bold text-blue-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-gears"></i> Configuración de Sistema</h3>
+                        <h3 class="font-black text-blue-300 mb-4 flex items-center gap-2"><i class="fa-solid fa-gears"></i> Configuración de sistema</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Datos Bancarios -->
                             <div class="space-y-3">
-                                <p class="text-[10px] uppercase font-bold text-slate-400">Datos para Transferencia (CBU/Alias)</p>
-                                <textarea id="conf-bank-info" rows="3" placeholder="Ej: Banco Nación&#10;CBU: 0110...&#10;Alias: COCINA.GOURMET" class="text-sm"></textarea>
-                                <button onclick="saveBankSettings()" class="w-full bg-blue-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-blue-500 transition-all">Guardar CBU</button>
+                                <p class="text-[10px] uppercase font-black text-slate-400">Datos para transferencia</p>
+                                <textarea id="conf-bank-info" rows="3" placeholder="Banco&#10;CBU&#10;Alias" class="text-sm"></textarea>
+                                <button onclick="saveBankSettings()" class="w-full bg-blue-600 text-white py-2 rounded-lg text-xs font-black hover:bg-blue-500 transition-all">Guardar CBU</button>
                             </div>
-                            <!-- Datos Supabase -->
                             <div class="space-y-3">
-                                <p class="text-[10px] uppercase font-bold text-slate-400">Conexión de Base de Datos</p>
+                                <p class="text-[10px] uppercase font-black text-slate-400">Conexión de base de datos</p>
                                 <input type="text" id="conf-db-url" placeholder="Supabase URL" class="text-xs mb-2">
                                 <input type="password" id="conf-db-key" placeholder="Supabase Key" class="text-xs mb-2">
-                                <button onclick="saveConnectionSettings()" class="w-full bg-slate-700 text-white py-2 rounded-lg text-xs font-bold hover:bg-slate-600 transition-all">Actualizar Conexión</button>
-                                <p class="text-[9px] text-slate-500 italic">Nota: Al guardar se recargará la aplicación.</p>
+                                <button onclick="saveConnectionSettings()" class="w-full bg-slate-700 text-white py-2 rounded-lg text-xs font-black hover:bg-slate-600 transition-all">Actualizar conexión</button>
+                                <p class="text-[9px] text-slate-500 italic">Al guardar se recargará la aplicación.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="space-y-6">
-                    <!-- CATEGORÍAS -->
                     <div class="glass p-6 rounded-2xl border border-emerald-500/20">
-                        <h3 class="font-bold text-emerald-400 mb-4">Categorías</h3>
+                        <h3 class="font-black text-emerald-400 mb-4">Categorías</h3>
                         <div id="admin-cats-list" class="flex flex-wrap gap-2 mb-4"></div>
                         <div class="flex gap-2">
-                            <input type="text" id="new-cat-name" placeholder="Nueva Categoría" class="text-sm">
+                            <input type="text" id="new-cat-name" placeholder="Nueva categoría" class="text-sm">
                             <button onclick="addCategory()" class="bg-emerald-600 px-4 rounded-xl text-white hover:bg-emerald-500"><i class="fa-solid fa-plus"></i></button>
                         </div>
                     </div>
-
-                    <!-- ZONAS (EDITABLE) -->
                     <div class="glass p-6 rounded-2xl">
-                        <h3 class="font-bold text-emerald-400 mb-4">Zonas de Envío</h3>
+                        <h3 class="font-black text-emerald-400 mb-4">Zonas de envío</h3>
                         <div id="admin-zones" class="space-y-2 mb-4"></div>
-                        
                         <div class="p-4 bg-slate-800/50 rounded-xl border border-white/5">
-                            <p id="zone-form-title" class="text-[10px] uppercase font-bold text-slate-400 mb-3">Nueva Zona</p>
+                            <p id="zone-form-title" class="text-[10px] uppercase font-black text-slate-400 mb-3">Nueva zona</p>
                             <input type="hidden" id="z-id">
-                            <input type="text" id="new-zone-name" placeholder="Nombre (Ej: Pilar)" class="text-sm mb-2">
+                            <input type="text" id="new-zone-name" placeholder="Nombre (Ej: Godoy Cruz)" class="text-sm mb-2">
                             <input type="number" id="new-zone-cost" placeholder="Costo $" class="text-sm mb-2">
-                            <input type="text" id="new-zone-wa" placeholder="WhatsApp (Ej: 54911...)" class="text-sm mb-4">
-                            
+                            <input type="text" id="new-zone-wa" placeholder="WhatsApp (Ej: 549261...)" class="text-sm mb-4">
                             <div class="flex gap-2">
-                                <button id="btn-save-zone" onclick="saveZone()" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-emerald-500 transition-all">Guardar Zona</button>
-                                <button id="btn-cancel-zone" onclick="resetZoneForm()" class="hidden px-4 bg-slate-700 text-white py-2 rounded-lg text-xs font-bold">X</button>
+                                <button id="btn-save-zone" onclick="saveZone()" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-xs font-black hover:bg-emerald-500 transition-all">Guardar zona</button>
+                                <button id="btn-cancel-zone" onclick="resetZoneForm()" class="hidden px-4 bg-slate-700 text-white py-2 rounded-lg text-xs font-black">X</button>
                             </div>
                         </div>
                     </div>
@@ -422,173 +447,207 @@
         </section>
     </main>
 
-    <!-- Modal Producto -->
     <div id="modal-product" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4">
-        <div class="glass p-8 rounded-3xl w-full max-w-lg">
-            <h3 id="modal-product-title" class="text-xl font-bold mb-6 text-emerald-400">Nuevo Producto</h3>
+        <div class="glass-strong p-8 rounded-3xl w-full max-w-lg max-h-[94vh] overflow-y-auto">
+            <h3 id="modal-product-title" class="text-xl font-black mb-6 text-emerald-400">Nuevo producto</h3>
             <form id="form-product" class="space-y-4">
                 <input type="hidden" id="p-id">
                 <div>
-                    <label class="text-[10px] uppercase font-bold text-slate-500 ml-2">Nombre</label>
+                    <label class="text-[10px] uppercase font-black text-slate-500 ml-2">Nombre</label>
                     <input type="text" id="p-name" placeholder="Ej: Pizza de Muzzarella" required class="mt-1">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-500 ml-2">Precio ($)</label>
+                        <label class="text-[10px] uppercase font-black text-slate-500 ml-2">Precio ($)</label>
                         <input type="number" id="p-price" placeholder="0.00" required class="mt-1">
                     </div>
                     <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-500 ml-2">Categoría</label>
+                        <label class="text-[10px] uppercase font-black text-slate-500 ml-2">Categoría</label>
                         <select id="p-cat" required class="mt-1"></select>
                     </div>
                 </div>
                 <div>
-                    <label class="text-[10px] uppercase font-bold text-slate-500 ml-2">Imagen (Archivo)</label>
+                    <label class="text-[10px] uppercase font-black text-slate-500 ml-2">Imagen (archivo o URL/base64)</label>
                     <div class="mt-1">
                         <input type="file" id="p-file" accept="image/*" onchange="handleFileSelect(event)" class="text-sm w-full">
                         <input type="hidden" id="p-img-base64">
                     </div>
                     <div id="p-img-preview" class="mt-4 hidden text-center">
-                        <img src="" id="p-img-tag" class="w-32 h-32 object-cover rounded-2xl border-2 border-emerald-500/30 mx-auto shadow-lg">
+                        <img src="" id="p-img-tag" class="w-32 h-32 object-cover rounded-2xl border-2 border-emerald-500/30 mx-auto shadow-lg" alt="Preview producto">
                     </div>
                 </div>
                 <div class="flex gap-2 pt-4">
-                    <button type="submit" id="btn-save-product" class="flex-1 btn-primary py-3 rounded-xl font-bold text-white">Guardar</button>
-                    <button type="button" onclick="closeProductModal()" class="px-6 bg-slate-700 py-3 rounded-xl font-bold text-white">Cerrar</button>
+                    <button type="submit" id="btn-save-product" class="flex-1 btn-primary py-3 rounded-xl font-black text-white">Guardar</button>
+                    <button type="button" onclick="closeProductModal()" class="px-6 btn-dark py-3 rounded-xl font-black text-white">Cerrar</button>
                 </div>
             </form>
         </div>
     </div>
 
-
-
-    <!-- Botón fijo inferior para comprar en celular -->
     <div id="bottom-buy-bar" class="fixed bottom-0 left-0 w-full bg-slate-950/95 border-t border-white/10 p-3 z-[70] md:hidden">
-        <button onclick="toggleCart()" class="w-full btn-primary py-3 rounded-2xl font-bold text-white text-sm shadow-xl">
-            🛒 Ver pedido / Comprar
+        <button onclick="toggleCart(true)" class="w-full btn-primary py-3 rounded-2xl font-black text-white text-sm shadow-xl">
+            <i class="fa-solid fa-basket-shopping mr-2"></i>Ver pedido / Comprar
         </button>
     </div>
 
-    <!-- Botón flotante de consulta -->
-    <button
-        onclick="openGeneralConsult()"
-        class="fixed bottom-24 md:bottom-5 right-4 md:right-5 bg-emerald-500 hover:bg-emerald-400 text-white px-4 md:px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 z-[65] font-bold border border-white/20"
-        title="Consultar por WhatsApp"
-    >
+    <button onclick="openGeneralConsult()" class="fixed bottom-24 md:bottom-5 right-4 md:right-5 bg-emerald-500 hover:bg-emerald-400 text-white px-4 md:px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 z-[65] font-black border border-white/20" title="Consultar por WhatsApp">
         <i class="fa-brands fa-whatsapp text-xl"></i>
         <span class="hidden sm:inline">Consultar</span>
     </button>
 
     <script>
-        // Valores por defecto
         const DEFAULT_URL = "https://peoimydvofprzemjvyzg.supabase.co";
         const DEFAULT_KEY = "sb_publishable_pq5tsxdZqiNJxiQg7R6YpQ_vshWWv7H";
         const WHATSAPP_FIXED = "5492616668454";
-        let ADMIN_PASSWORD = "";
         const ADMIN_PASSWORD_CONFIG_KEY = "admin_password";
+        const BANK_INFO_CONFIG_KEY = "bank_info";
 
+        let ADMIN_PASSWORD = "";
         let sb = null;
         let products = [], categories = [], zones = [], cart = [], orders = [];
-        let currentCat = 'all', isViewAdminUnlocked = false, searchTerm = '';
+        let currentCat = "all", isViewAdminUnlocked = false, searchTerm = "";
+        let analyticsTableAvailable = false;
+        let searchDebounce = null;
 
         const PRESET_COMBOS = [
-            {
-                id: 'combo_freezer',
-                name: 'Combo Freezer',
-                price: 97000,
-                image_url: 'https://via.placeholder.com/400?text=Combo+Freezer',
-                description: 'Incluye: 3 pizzas muzzarella grandes + 2 packs de empanadas x6 + 2 tartines individuales a elección. Ideal para 5 a 7 comidas rápidas.'
-            },
-            {
-                id: 'combo_familiar',
-                name: 'Combo Familiar',
-                price: 75000,
-                image_url: 'https://via.placeholder.com/400?text=Combo+Familiar',
-                description: 'Incluye: 2 pizzas grandes + 2 packs de empanadas x6 + 2 tartines individuales. Pensado para almuerzo o cena familiar.'
-            },
-            {
-                id: 'combo_revendedor',
-                name: 'Combo Revendedor',
-                price: 125000,
-                image_url: 'https://via.placeholder.com/400?text=Combo+Revendedor',
-                description: 'Incluye: mix inicial de productos congelados con pizzas, empanadas y tartines. Ideal para almacenes, hostels y comercios.'
-            }
+            { id: "combo_freezer", name: "Combo Freezer", price: 97000, old_price: 117000, image_url: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=900&q=80", description: "Incluye: 3 pizzas muzzarella grandes + 2 packs de empanadas x6 + 2 tartines individuales. Ideal para 5 a 7 comidas rápidas.", bullets: ["3 pizzas muzzarella grandes", "2 packs de empanadas x6", "2 tartines individuales", "5 a 7 comidas rápidas"] },
+            { id: "combo_familiar", name: "Combo Familiar", price: 75000, old_price: 89000, image_url: "https://images.unsplash.com/photo-1601924582975-7e9e1df4b8d7?auto=format&fit=crop&w=900&q=80", description: "Incluye: 2 pizzas grandes + 2 packs de empanadas x6 + 2 tartines individuales. Pensado para almuerzo o cena familiar.", bullets: ["2 pizzas grandes", "2 packs de empanadas x6", "2 tartines individuales", "Compra práctica para casa"] },
+            { id: "combo_revendedor", name: "Combo Revendedor", price: 125000, old_price: 150000, image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80", description: "Mix inicial de productos congelados con pizzas, empanadas y tartines. Ideal para almacenes, hostels y comercios.", bullets: ["Mix inicial congelado", "Pizzas, empanadas y tartines", "Fácil de cocinar y revender", "Ideal negocio o hostel"] }
         ];
 
         window.onload = () => initApp();
 
-        function initApp() {
-            const savedUrl = localStorage.getItem('cg_db_url') || DEFAULT_URL;
-            const savedKey = localStorage.getItem('cg_db_key') || DEFAULT_KEY;
-            
-            // Cargar datos en los inputs del panel
-            document.getElementById('conf-db-url').value = savedUrl;
-            document.getElementById('conf-db-key').value = savedKey;
-            document.getElementById('conf-bank-info').value = localStorage.getItem('cg_bank_info') || "Banco: \nCBU: \nAlias: ";
-            
-            trackEvent('page_view', { referrer: document.referrer || 'directo' });
-            connectDB(savedUrl, savedKey);
+        function money(value) { return "$" + Number(value || 0).toLocaleString("es-AR"); }
+        function todayDateKey(date = new Date()) {
+            return new Intl.DateTimeFormat("en-CA", {
+                timeZone: "America/Argentina/Buenos_Aires",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit"
+            }).format(date);
+        }
+        function dateKeyFromValue(value) {
+            const date = value ? new Date(value) : new Date();
+            return Number.isNaN(date.getTime()) ? "" : todayDateKey(date);
+        }
+        function safeText(value) {
+            return String(value || "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+        }
+        function safeJs(value) {
+            return String(value || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\r?\n/g, " ");
+        }
+        function safeUrl(value) {
+            const url = String(value || "").trim();
+            if (/^(https?:\/\/|data:image\/)/i.test(url)) return safeText(url);
+            return "";
+        }
+
+        async function initApp() {
+            const savedUrl = localStorage.getItem("cg_db_url") || DEFAULT_URL;
+            const savedKey = localStorage.getItem("cg_db_key") || DEFAULT_KEY;
+            document.getElementById("conf-db-url").value = savedUrl;
+            document.getElementById("conf-db-key").value = savedKey;
+            document.getElementById("conf-bank-info").value = localStorage.getItem("cg_bank_info") || "Banco:\nCBU:\nAlias:";
+            loadCart();
+            await connectDB(savedUrl, savedKey);
+            await trackEvent("page_view");
         }
 
         async function connectDB(url, key) {
             try {
                 sb = supabase.createClient(url, key);
-                // Test de conexión simple
-                const { error } = await sb.from('categories').select('id').limit(1);
-                if(error) throw error;
+                const { error } = await sb.from("categories").select("id").limit(1);
+                if (error) throw error;
                 updateDBIndicator(true);
                 await loadAdminPasswordFromConfig();
-                loadAllData();
-                document.getElementById('stat-db-ping').innerText = "ACTIVA";
-                document.getElementById('stat-db-ping').className = "text-[10px] font-bold text-emerald-400 uppercase";
+                await loadBankInfoFromConfig();
+                await checkAnalyticsTable();
+                await loadAllData();
+                document.getElementById("stat-db-ping").innerText = "ACTIVA";
+                document.getElementById("stat-db-ping").className = "text-[10px] font-black text-emerald-400 uppercase";
+                return true;
             } catch (e) {
                 console.error("Fallo de conexión Supabase:", e);
                 updateDBIndicator(false);
-                document.getElementById('stat-db-ping').innerText = "ERROR";
-                document.getElementById('stat-db-ping').className = "text-[10px] font-bold text-rose-500 uppercase";
+                document.getElementById("stat-db-ping").innerText = "ERROR";
+                document.getElementById("stat-db-ping").className = "text-[10px] font-black text-rose-500 uppercase";
+                renderPresetCombos();
+                renderShop();
+                renderAnalyticsStats();
+                return false;
             }
         }
 
         function updateDBIndicator(success) {
-            const dot = document.getElementById('db-status-dot');
-            dot.className = `w-2 h-2 rounded-full pulse ${success ? 'bg-emerald-500' : 'bg-rose-500'}`;
+            const dot = document.getElementById("db-status-dot");
+            dot.className = `w-2 h-2 rounded-full pulse ${success ? "bg-emerald-500" : "bg-rose-500"}`;
+        }
+
+        async function checkAnalyticsTable() {
+            if (!sb) return;
+            try {
+                const { error } = await sb.from("analytics_daily").select("event_date").limit(1);
+                if (error) throw error;
+                analyticsTableAvailable = true;
+                setAnalyticsDBStatus("DB: analytics_daily activa", true);
+            } catch (e) {
+                analyticsTableAvailable = false;
+                setAnalyticsDBStatus("DB: falta analytics_daily", false);
+            }
+        }
+
+        function setAnalyticsDBStatus(text, success) {
+            const el = document.getElementById("ana-db-status");
+            if (!el) return;
+            el.innerText = text;
+            el.className = `${success ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"} px-4 py-2 rounded-xl text-xs font-black`;
         }
 
         async function loadAdminPasswordFromConfig() {
-            if(!sb) return;
+            if (!sb) return;
             try {
-                const { data, error } = await sb
-                    .from('config')
-                    .select('key,value')
-                    .eq('key', ADMIN_PASSWORD_CONFIG_KEY)
-                    .maybeSingle();
+                const { data, error } = await sb.from("config").select("key,value").eq("key", ADMIN_PASSWORD_CONFIG_KEY).maybeSingle();
+                if (error) throw error;
+                ADMIN_PASSWORD = data && data.value ? String(data.value).trim() : "";
+                if (!ADMIN_PASSWORD) console.warn("No se encontró admin_password en config.");
+            } catch (e) {
+                console.error("Error cargando contraseña admin:", e);
+                ADMIN_PASSWORD = "";
+            }
+        }
 
-                if(error) throw error;
-
-                ADMIN_PASSWORD = data && data.value ? String(data.value).trim() : '';
-                if(!ADMIN_PASSWORD) {
-                    console.warn('No se encontró admin_password en la tabla config.');
+        async function loadBankInfoFromConfig() {
+            const fallback = localStorage.getItem("cg_bank_info") || "Banco:\nCBU:\nAlias:";
+            const input = document.getElementById("conf-bank-info");
+            if (input) input.value = fallback;
+            if (!sb) return;
+            try {
+                const { data, error } = await sb.from("config").select("key,value").eq("key", BANK_INFO_CONFIG_KEY).maybeSingle();
+                if (error) throw error;
+                if (data && data.value) {
+                    const value = String(data.value);
+                    localStorage.setItem("cg_bank_info", value);
+                    if (input) input.value = value;
                 }
-            } catch(e) {
-                console.error('Error cargando contraseña admin desde Supabase:', e);
-                ADMIN_PASSWORD = '';
+            } catch (e) {
+                console.warn("No se pudo cargar bank_info desde config. Se usa localStorage.", e);
             }
         }
 
         async function loadAllData() {
-            if(!sb) return;
+            if (!sb) return;
             try {
                 const [p, c, z, o] = await Promise.all([
-                    sb.from('products').select('*').order('name'),
-                    sb.from('categories').select('*').order('name'),
-                    sb.from('zones').select('*').order('name'),
-                    sb.from('orders').select('*').order('created_at', { ascending: false }).limit(30)
+                    sb.from("products").select("*").order("name"),
+                    sb.from("categories").select("*").order("name"),
+                    sb.from("zones").select("*").order("name"),
+                    sb.from("orders").select("*").order("created_at", { ascending: false }).limit(30)
                 ]);
                 products = p.data || [];
                 categories = c.data || [];
                 zones = z.data || [];
                 orders = o.data || [];
-                
+                renderPresetCombos();
                 renderShop();
                 renderAdmin();
                 updateCheckoutUI();
@@ -596,125 +655,70 @@
                 updateStats();
                 renderAnalyticsStats();
                 loadDailyAnalyticsStats();
-                renderAnalyticsStats();
             } catch (e) { console.error("Error cargando tablas:", e); }
         }
 
         function updateStats() {
-            const today = new Date().toISOString().split('T')[0];
-            const ordersToday = orders.filter(o => o.created_at.startsWith(today)).length;
-            document.getElementById('stat-orders-today').innerText = ordersToday;
-            document.getElementById('stat-products').innerText = products.length;
-            document.getElementById('stat-cats').innerText = categories.length;
+            const today = todayDateKey();
+            document.getElementById("stat-orders-today").innerText = orders.filter(o => dateKeyFromValue(o.created_at) === today).length;
+            document.getElementById("stat-products").innerText = products.length;
+            document.getElementById("stat-cats").innerText = categories.length;
         }
 
-        // --- ANALYTICS / ESTADÍSTICAS ---
-        function getAnalyticsEvents() {
-            return JSON.parse(localStorage.getItem('cg_analytics_events') || '[]');
+        function getAnalyticsEvents() { return JSON.parse(localStorage.getItem("cg_analytics_events_v10") || "[]"); }
+        function saveAnalyticsEvents(events) { localStorage.setItem("cg_analytics_events_v10", JSON.stringify(events.slice(-1200))); }
+
+        async function trackEvent(type, label = "general", data = {}) {
+            const finalLabel = String(label || "general").trim() || "general";
+            const event = { type, label: finalLabel, data, created_at: new Date().toISOString(), path: location.pathname, referrer: document.referrer || "directo" };
+            const events = getAnalyticsEvents();
+            events.push(event);
+            saveAnalyticsEvents(events);
+            renderAnalyticsStats();
+            if (sb && analyticsTableAvailable) await incrementDailyAnalytics(type, finalLabel);
         }
 
-        function saveAnalyticsEvents(events) {
-            localStorage.setItem('cg_analytics_events', JSON.stringify(events.slice(-1000)));
-        }
-
-        function todayDateKey() {
-            return new Date().toISOString().split('T')[0];
-        }
-
-        function analyticsLabelsForEvent(event) {
-            const labels = ['general'];
-            const data = event.data || {};
-
-            if(event.type === 'add_to_cart' && data.product_name) labels.push(data.product_name);
-            if(event.type === 'product_consult_click' && data.product_name) labels.push(data.product_name);
-            if(event.type === 'zone_selected' && (data.zone_name || data.zone_id)) labels.push(data.zone_name || data.zone_id);
-            if(event.type === 'whatsapp_order' && data.zone_name) labels.push(data.zone_name);
-            if(event.type === 'payment_selected' && data.payment) labels.push(data.payment);
-            if(event.type === 'category_filter' && data.category_name) labels.push(data.category_name);
-
-            return [...new Set(labels.filter(Boolean))];
-        }
-
-        async function incrementDailyAnalyticsRow(eventType, label) {
-            if(!sb) return;
-            const eventDate = todayDateKey();
-
-            const { data: existing, error: selectError } = await sb
-                .from('analytics_daily')
-                .select('total')
-                .eq('event_date', eventDate)
-                .eq('event_type', eventType)
-                .eq('label', label)
-                .maybeSingle();
-
-            if(selectError) throw selectError;
-
-            const nextTotal = existing && typeof existing.total === 'number' ? existing.total + 1 : 1;
-
-            const { error: upsertError } = await sb
-                .from('analytics_daily')
-                .upsert([{
+        async function incrementDailyAnalytics(eventType, label) {
+            try {
+                const eventDate = todayDateKey();
+                const { error: rpcError } = await sb.rpc("increment_analytics_daily", {
+                    p_event_date: eventDate,
+                    p_event_type: eventType,
+                    p_label: label
+                });
+                if (!rpcError) {
+                    setAnalyticsDBStatus("DB: analytics_daily activa", true);
+                    return;
+                }
+                console.warn("RPC increment_analytics_daily no disponible, usando fallback no atomico.", rpcError);
+                const { data: existing, error: selectError } = await sb
+                    .from("analytics_daily")
+                    .select("total")
+                    .eq("event_date", eventDate)
+                    .eq("event_type", eventType)
+                    .eq("label", label)
+                    .maybeSingle();
+                if (selectError) throw selectError;
+                const nextTotal = existing && typeof existing.total === "number" ? existing.total + 1 : 1;
+                const { error: upsertError } = await sb.from("analytics_daily").upsert([{
                     event_date: eventDate,
                     event_type: eventType,
                     label,
                     total: nextTotal,
                     updated_at: new Date().toISOString()
-                }], { onConflict: 'event_date,event_type,label' });
-
-            if(upsertError) throw upsertError;
-        }
-
-        async function saveDailyAnalytics(event) {
-            try {
-                const labels = analyticsLabelsForEvent(event);
-                for (const label of labels) {
-                    await incrementDailyAnalyticsRow(event.type, label);
-                }
-
-                const dbStatus = document.getElementById('ana-db-status');
-                if(dbStatus) {
-                    dbStatus.innerText = 'DB: guardando por día';
-                    dbStatus.className = 'bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-xl text-xs font-bold';
-                }
-            } catch(e) {
-                const dbStatus = document.getElementById('ana-db-status');
-                if(dbStatus) {
-                    dbStatus.innerText = 'DB: falta analytics_daily';
-                    dbStatus.className = 'bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold';
-                }
-                // No frena la web si la tabla todavía no existe.
-            }
-        }
-
-        async function trackEvent(type, data = {}) {
-            const event = {
-                type,
-                data,
-                created_at: new Date().toISOString(),
-                path: location.pathname,
-                referrer: document.referrer || 'directo'
-            };
-
-            const events = getAnalyticsEvents();
-            events.push(event);
-            saveAnalyticsEvents(events);
-            renderAnalyticsStats();
-
-            await saveDailyAnalytics(event);
-            loadDailyAnalyticsStats();
-
-            // Guarda el detalle de eventos si también existe la tabla analytics_events.
-            try {
-                if (sb) await sb.from('analytics_events').insert([event]);
-            } catch(e) {
-                // No frena la web si la tabla no existe.
+                }], { onConflict: "event_date,event_type,label" });
+                if (upsertError) throw upsertError;
+                setAnalyticsDBStatus("DB: analytics_daily activa", true);
+            } catch (e) {
+                console.warn("No se pudo guardar analytics_daily.", e);
+                setAnalyticsDBStatus("DB: analytics sin guardar en DB", false);
             }
         }
 
         function countBy(events, keyFn) {
             return events.reduce((acc, ev) => {
                 const key = keyFn(ev);
-                if(!key) return acc;
+                if (!key) return acc;
                 acc[key] = (acc[key] || 0) + 1;
                 return acc;
             }, {});
@@ -722,126 +726,92 @@
 
         function topKey(obj) {
             const entries = Object.entries(obj);
-            if(entries.length === 0) return 'Sin datos';
+            if (!entries.length) return "Sin datos";
             entries.sort((a,b) => b[1] - a[1]);
             return `${entries[0][0]} (${entries[0][1]})`;
         }
 
         function renderAnalyticsStats() {
             const events = getAnalyticsEvents();
-
-            const elVisits = document.getElementById('ana-visits');
-            if(!elVisits) return;
-
-            elVisits.innerText = events.filter(e => e.type === 'page_view').length;
-            document.getElementById('ana-adds').innerText = events.filter(e => e.type === 'add_to_cart').length;
-            document.getElementById('ana-checkout').innerText = events.filter(e => e.type === 'checkout_started').length;
-            document.getElementById('ana-whatsapp').innerText = events.filter(e => e.type === 'whatsapp_order').length;
-
-            const productCounts = countBy(events.filter(e => e.type === 'add_to_cart'), e => e.data?.product_name);
-            const zoneCounts = countBy(events.filter(e => e.type === 'zone_selected' || e.type === 'whatsapp_order'), e => e.data?.zone_name || e.data?.zone_id);
-            const refCounts = countBy(events.filter(e => e.type === 'page_view'), e => e.referrer || 'directo');
-
-            document.getElementById('ana-top-product').innerText = topKey(productCounts);
-            document.getElementById('ana-top-zone').innerText = topKey(zoneCounts);
-            document.getElementById('ana-referrer').innerText = topKey(refCounts);
+            const today = todayDateKey();
+            const todayEvents = events.filter(e => dateKeyFromValue(e.created_at) === today);
+            const el = document.getElementById("ana-visits");
+            if (!el) return;
+            document.getElementById("ana-visits").innerText = todayEvents.filter(e => e.type === "page_view").length;
+            document.getElementById("ana-searches").innerText = todayEvents.filter(e => e.type === "search").length;
+            document.getElementById("ana-adds").innerText = todayEvents.filter(e => e.type === "add_to_cart").length;
+            document.getElementById("ana-whatsapp").innerText = todayEvents.filter(e => e.type === "order_whatsapp").length;
+            document.getElementById("ana-top-consult").innerText = topKey(countBy(events.filter(e => e.type === "consult_product"), e => e.label));
+            document.getElementById("ana-top-product").innerText = topKey(countBy(events.filter(e => e.type === "add_to_cart"), e => e.label));
+            document.getElementById("ana-top-combo").innerText = topKey(countBy(events.filter(e => e.type === "combo_add"), e => e.label));
+            document.getElementById("ana-top-zone").innerText = topKey(countBy(events.filter(e => e.type === "order_whatsapp" || e.type === "checkout_start"), e => e.data?.zone_name));
         }
 
         async function loadDailyAnalyticsStats() {
-            if(!sb) return;
-            const elVisits = document.getElementById('ana-visits');
-            if(!elVisits) return;
-
+            if (!sb) return;
             try {
                 const fromDate = new Date();
                 fromDate.setDate(fromDate.getDate() - 30);
-                const fromKey = fromDate.toISOString().split('T')[0];
-
-                const { data, error } = await sb
-                    .from('analytics_daily')
-                    .select('*')
-                    .gte('event_date', fromKey)
-                    .order('event_date', { ascending: false });
-
-                if(error) throw error;
-
-                const dbStatus = document.getElementById('ana-db-status');
-                if(dbStatus) {
-                    dbStatus.innerText = 'DB: activa por día';
-                    dbStatus.className = 'bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-xl text-xs font-bold';
-                }
-
-                const today = todayDateKey();
-                const todayRows = (data || []).filter(r => r.event_date === today && r.label === 'general');
-
-                const getTodayTotal = (type) => {
-                    const row = todayRows.find(r => r.event_type === type);
-                    return row ? Number(row.total || 0) : 0;
-                };
-
-                document.getElementById('ana-visits').innerText = getTodayTotal('page_view');
-                document.getElementById('ana-adds').innerText = getTodayTotal('add_to_cart');
-                document.getElementById('ana-checkout').innerText = getTodayTotal('checkout_started');
-                document.getElementById('ana-whatsapp').innerText = getTodayTotal('whatsapp_order');
-
-                const topProductRows = (data || []).filter(r => r.event_type === 'add_to_cart' && r.label !== 'general');
-                const productCounts = topProductRows.reduce((acc, r) => {
-                    acc[r.label] = (acc[r.label] || 0) + Number(r.total || 0);
-                    return acc;
-                }, {});
-
-                const topZoneRows = (data || []).filter(r => (r.event_type === 'zone_selected' || r.event_type === 'whatsapp_order') && r.label !== 'general');
-                const zoneCounts = topZoneRows.reduce((acc, r) => {
-                    acc[r.label] = (acc[r.label] || 0) + Number(r.total || 0);
-                    return acc;
-                }, {});
-
-                document.getElementById('ana-top-product').innerText = topKey(productCounts);
-                document.getElementById('ana-top-zone').innerText = topKey(zoneCounts);
-
+                const fromKey = todayDateKey(fromDate);
+                const { data, error } = await sb.from("analytics_daily").select("*").gte("event_date", fromKey).order("event_date", { ascending: false });
+                if (error) throw error;
+                analyticsTableAvailable = true;
+                setAnalyticsDBStatus("DB: analytics_daily activa", true);
+                const todayRows = (data || []).filter(r => r.event_date === todayDateKey());
+                const totalFor = (type) => todayRows.filter(r => r.event_type === type).reduce((sum, r) => sum + Number(r.total || 0), 0);
+                document.getElementById("ana-visits").innerText = totalFor("page_view");
+                document.getElementById("ana-searches").innerText = totalFor("search");
+                document.getElementById("ana-adds").innerText = totalFor("add_to_cart");
+                document.getElementById("ana-whatsapp").innerText = totalFor("order_whatsapp");
+                document.getElementById("ana-top-consult").innerText = topKey((data || []).filter(r => r.event_type === "consult_product").reduce((a,r)=>(a[r.label]=(a[r.label]||0)+Number(r.total||0),a),{}));
+                document.getElementById("ana-top-product").innerText = topKey((data || []).filter(r => r.event_type === "add_to_cart").reduce((a,r)=>(a[r.label]=(a[r.label]||0)+Number(r.total||0),a),{}));
+                document.getElementById("ana-top-combo").innerText = topKey((data || []).filter(r => r.event_type === "combo_add").reduce((a,r)=>(a[r.label]=(a[r.label]||0)+Number(r.total||0),a),{}));
                 const days = [...new Set((data || []).map(r => r.event_date))].slice(0, 7);
-                const dailyHtml = days.map(day => {
-                    const rows = (data || []).filter(r => r.event_date === day && r.label === 'general');
-                    const visits = rows.find(r => r.event_type === 'page_view')?.total || 0;
-                    const adds = rows.find(r => r.event_type === 'add_to_cart')?.total || 0;
-                    const checkout = rows.find(r => r.event_type === 'checkout_started')?.total || 0;
-                    const wa = rows.find(r => r.event_type === 'whatsapp_order')?.total || 0;
-                    return `<div class="flex justify-between gap-2 border-b border-white/5 py-1"><span class="font-bold text-white">${day}</span><span>Visitas ${visits} · Agregados ${adds} · Checkout ${checkout} · WhatsApp ${wa}</span></div>`;
-                }).join('');
-
-                const dailyList = document.getElementById('ana-daily-list');
-                if(dailyList) dailyList.innerHTML = dailyHtml || 'Sin datos todavía';
-            } catch(e) {
-                const dbStatus = document.getElementById('ana-db-status');
-                if(dbStatus) {
-                    dbStatus.innerText = 'DB: falta analytics_daily';
-                    dbStatus.className = 'bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold';
-                }
+                document.getElementById("ana-daily-list").innerHTML = days.map(day => {
+                    const rows = (data || []).filter(r => r.event_date === day);
+                    const sum = type => rows.filter(r => r.event_type === type).reduce((a,r)=>a+Number(r.total||0),0);
+                    return `<div class="flex justify-between gap-2 border-b border-white/5 py-1"><span class="font-black text-white">${day}</span><span>Visitas ${sum("page_view")} · Búsquedas ${sum("search")} · Agregados ${sum("add_to_cart")} · WhatsApp ${sum("order_whatsapp")}</span></div>`;
+                }).join("") || "Sin datos todavía";
+            } catch (e) {
+                analyticsTableAvailable = false;
+                setAnalyticsDBStatus("DB: falta analytics_daily", false);
             }
         }
 
         function resetLocalAnalytics() {
-            if(confirm("¿Borrar estadísticas locales de este navegador?")) {
-                localStorage.removeItem('cg_analytics_events');
+            if (confirm("¿Borrar estadísticas locales de este navegador?")) {
+                localStorage.removeItem("cg_analytics_events_v10");
                 renderAnalyticsStats();
                 loadDailyAnalyticsStats();
             }
         }
 
-        // --- CONFIGURACIONES ---
-        function saveBankSettings() {
-            const info = document.getElementById('conf-bank-info').value;
-            localStorage.setItem('cg_bank_info', info);
-            alert("✅ Información bancaria actualizada.");
+        async function saveBankSettings() {
+            const info = document.getElementById("conf-bank-info").value;
+            localStorage.setItem("cg_bank_info", info);
+            if (sb) {
+                try {
+                    const { error } = await sb.from("config").upsert([{
+                        key: BANK_INFO_CONFIG_KEY,
+                        value: info
+                    }], { onConflict: "key" });
+                    if (error) throw error;
+                    alert("Información bancaria actualizada en Supabase.");
+                    return;
+                } catch (e) {
+                    console.warn("No se pudo guardar bank_info en Supabase. Queda guardado localmente.", e);
+                }
+            }
+            alert("Información bancaria guardada solo en este navegador. Revisá permisos de config en Supabase.");
         }
 
         function saveConnectionSettings() {
-            const url = document.getElementById('conf-db-url').value.trim();
-            const key = document.getElementById('conf-db-key').value.trim();
-            if(!url || !key) return alert("Debes ingresar URL y Key válidas.");
-            localStorage.setItem('cg_db_url', url);
-            localStorage.setItem('cg_db_key', key);
-            alert("🚀 Configuración guardada. Recargando...");
+            const url = document.getElementById("conf-db-url").value.trim();
+            const key = document.getElementById("conf-db-key").value.trim();
+            if (!url || !key) return alert("Debes ingresar URL y Key válidas.");
+            localStorage.setItem("cg_db_url", url);
+            localStorage.setItem("cg_db_key", key);
+            alert("Configuración guardada. Recargando...");
             location.reload();
         }
 
@@ -851,433 +821,456 @@
             if (file.size > 2 * 1024 * 1024) { alert("La imagen es muy pesada (máximo 2MB)"); event.target.value = ""; return; }
             const reader = new FileReader();
             reader.onload = (e) => {
-                const base64String = e.target.result;
-                document.getElementById('p-img-base64').value = base64String;
-                document.getElementById('p-img-tag').src = base64String;
-                document.getElementById('p-img-preview').classList.remove('hidden');
+                document.getElementById("p-img-base64").value = e.target.result;
+                document.getElementById("p-img-tag").src = e.target.result;
+                document.getElementById("p-img-preview").classList.remove("hidden");
             };
             reader.readAsDataURL(file);
         }
 
-        // --- SHOP ---
+        function renderPresetCombos() {
+            const grid = document.getElementById("preset-combos-grid");
+            if (!grid) return;
+            grid.innerHTML = PRESET_COMBOS.map(combo => `
+                <div class="combo-card glass rounded-3xl overflow-hidden sale-card">
+                    <div class="relative z-10">
+                        <img src="${safeUrl(combo.image_url)}" alt="${safeText(combo.name)}" class="w-full h-44 object-cover">
+                        <div class="p-6">
+                            <p class="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-2">${combo.id === "combo_freezer" ? "Más vendido" : combo.id === "combo_revendedor" ? "Negocio" : "Para compartir"}</p>
+                            <h3 class="text-xl font-black mb-2">${safeText(combo.name)}</h3>
+                            <ul class="text-sm text-slate-300 space-y-1 mb-4">${combo.bullets.map(b => `<li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>${safeText(b)}</li>`).join("")}</ul>
+                            <div class="flex items-end justify-between gap-3 mb-5">
+                                <div>
+                                    <p class="text-slate-500 line-through text-sm">${money(combo.old_price)}</p>
+                                    <p class="combo-price text-3xl font-black text-emerald-400">${money(combo.price)}</p>
+                                </div>
+                                <p class="text-xs text-amber-300 font-black text-right">Ahorrás ${money(combo.old_price - combo.price)}</p>
+                            </div>
+                            <button onclick="addPresetCombo('${safeJs(combo.id)}')" class="btn-primary w-full py-3 rounded-2xl font-black text-white">Agregar combo</button>
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
         function renderShop() {
-            const catCont = document.getElementById('cat-list');
-            catCont.innerHTML = `<button onclick="setFilter('all')" class="px-5 py-2 rounded-full font-bold whitespace-nowrap ${currentCat === 'all' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'}">Todos</button>`;
-            categories.forEach(c => {
-                catCont.innerHTML += `<button onclick="setFilter('${c.id}')" class="px-5 py-2 rounded-full font-bold whitespace-nowrap ${currentCat === c.id ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'}">${c.name}</button>`;
-            });
+            renderPresetCombos();
+            const catCont = document.getElementById("cat-list");
+            catCont.innerHTML = `<button onclick="setFilter('all')" class="px-5 py-2 rounded-full font-black whitespace-nowrap ${currentCat === "all" ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-400"}">Todos</button>`;
+            categories.forEach(c => catCont.innerHTML += `<button onclick="setFilter('${safeJs(c.id)}')" class="px-5 py-2 rounded-full font-black whitespace-nowrap ${currentCat === c.id ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-400"}">${safeText(c.name)}</button>`);
 
-            const grid = document.getElementById('products-grid');
-            const term = (searchTerm || '').trim().toLowerCase();
-            let filtered = currentCat === 'all' ? products : products.filter(p => p.category_id === currentCat);
-            if(term) {
-                filtered = filtered.filter(p =>
-                    (p.name || '').toLowerCase().includes(term) ||
-                    (p.description || '').toLowerCase().includes(term)
-                );
+            const grid = document.getElementById("products-grid");
+            const term = (searchTerm || "").trim().toLowerCase();
+            let filtered = currentCat === "all" ? products : products.filter(p => p.category_id === currentCat);
+            if (term) filtered = filtered.filter(p => (p.name || "").toLowerCase().includes(term) || (p.description || "").toLowerCase().includes(term));
+
+            const resultText = document.getElementById("search-result-text");
+            if (term) {
+                resultText.classList.remove("hidden");
+                resultText.innerHTML = `Resultado de búsqueda: <span class="text-emerald-400 font-black">${filtered.length}</span> producto(s) para "${safeText(term)}"`;
+            } else {
+                resultText.classList.add("hidden");
+                resultText.innerHTML = "";
             }
 
-            const resultText = document.getElementById('search-result-text');
-            if(resultText) {
-                if(term) {
-                    resultText.classList.remove('hidden');
-                    resultText.innerHTML = `Resultado de búsqueda: <span class="text-emerald-400 font-bold">${filtered.length}</span> producto(s) para "${term}"`;
-                } else {
-                    resultText.classList.add('hidden');
-                    resultText.innerHTML = '';
-                }
-            }
-            
-            if(filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500 font-bold">No se encontraron productos. Probá con pizza, empanada, tarta o vianda.</div>`;
+            if (!filtered.length) {
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500 font-black">No se encontraron productos. Probá con pizza, empanada, tarta o vianda.</div>`;
                 return;
             }
 
             grid.innerHTML = filtered.map(p => `
                 <div class="glass product-card p-3 md:p-4 rounded-3xl flex flex-col group pop-in border border-white/5 hover:border-emerald-500/30 transition-all h-full">
                     <div class="img-container mb-3 md:mb-4 shadow-xl">
-                        <img src="${p.image_url || ''}" onerror="this.src='https://via.placeholder.com/400?text=Cocina+Gourmet'">
+                        <img src="${safeUrl(p.image_url)}" alt="${safeText(p.name)}" onerror="this.src='https://via.placeholder.com/400?text=Cocina+Gourmet'">
                     </div>
-                    <h3 class="product-title font-bold mb-1 text-slate-100">${p.name}</h3>
-                    ${(p.name || '').toLowerCase().includes('tartin') || (p.name || '').toLowerCase().includes('tartín') ? `<p class="text-xs text-slate-400 mb-2">Porción individual • Lista para calentar</p>` : ''}
-                    <p class="text-emerald-400 font-bold text-lg md:text-xl mb-3 md:mb-4">$${parseFloat(p.price).toLocaleString()}</p>
+                    <h3 class="product-title font-black mb-1 text-slate-100">${safeText(p.name)}</h3>
+                    ${(p.name || "").toLowerCase().includes("tartin") || (p.name || "").toLowerCase().includes("tartín") ? `<p class="text-xs text-slate-400 mb-2">Porción individual · Lista para calentar</p>` : ""}
+                    <p class="text-emerald-400 font-black text-lg md:text-xl mb-3 md:mb-4">${money(p.price)}</p>
                     <div class="product-actions grid grid-cols-2 gap-2 mt-auto">
-                        <button onclick="consultProduct('${p.id}')" class="w-full h-12 bg-slate-800 hover:bg-slate-700 rounded-2xl font-bold text-white border border-white/10 text-sm flex items-center justify-center">Consultar</button>
-                        <button onclick="addToCart('${p.id}')" class="w-full h-12 btn-primary rounded-2xl font-bold text-white text-sm flex items-center justify-center">Agregar</button>
+                        <button onclick="consultProduct('${safeJs(p.id)}')" class="w-full h-12 btn-dark rounded-2xl font-black text-white text-sm flex items-center justify-center">Consultar</button>
+                        <button onclick="addToCart('${safeJs(p.id)}')" class="w-full h-12 btn-primary rounded-2xl font-black text-white text-sm flex items-center justify-center">Agregar</button>
                     </div>
                 </div>
-            `).join('');
+            `).join("");
         }
 
         function handleSearchInput(value) {
-            searchTerm = value || '';
-            const desktop = document.getElementById('search-input');
-            const mobile = document.getElementById('search-input-mobile');
-            if(desktop && desktop.value !== searchTerm) desktop.value = searchTerm;
-            if(mobile && mobile.value !== searchTerm) mobile.value = searchTerm;
-            trackEvent('product_search', { search: searchTerm });
+            searchTerm = value || "";
+            const desktop = document.getElementById("search-input");
+            const mobile = document.getElementById("search-input-mobile");
+            if (desktop && desktop.value !== searchTerm) desktop.value = searchTerm;
+            if (mobile && mobile.value !== searchTerm) mobile.value = searchTerm;
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => { if (searchTerm.trim()) trackEvent("search", searchTerm.trim()); }, 550);
             renderShop();
         }
 
         function focusSearch() {
-            showView('shop');
-            const input = document.getElementById('search-input-mobile') || document.getElementById('search-input');
-            if(input) {
-                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setTimeout(() => input.focus(), 300);
-            }
+            showView("shop");
+            const input = document.getElementById("search-input-mobile") || document.getElementById("search-input");
+            if (input) { input.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => input.focus(), 300); }
+        }
+
+        function getConsultWhatsapp() { return WHATSAPP_FIXED; }
+
+        function openGeneralConsult() {
+            const msg = "Hola, quiero consultar por los productos congelados de Cocina Gourmet. ¿Qué me recomiendan para llenar el freezer esta semana?";
+            trackEvent("consult_product", "consulta_general");
+            window.open(`https://wa.me/${getConsultWhatsapp()}?text=${encodeURIComponent(msg)}`, "_blank");
+        }
+
+        function quickGoal(goal) {
+            const messages = {
+                familia: "Hola, somos familia y quiero llenar el freezer con comidas congeladas. ¿Qué combo me recomiendan y para cuántas comidas alcanza?",
+                trabajo: "Hola, necesito comidas rápidas para la semana laboral. ¿Qué viandas o tartines me recomiendan?",
+                negocio: "Hola, tengo un negocio y quiero consultar por productos congelados para reventa. ¿Me pasan información del combo revendedor?"
+            };
+            trackEvent("consult_product", `objetivo_${goal}`);
+            window.open(`https://wa.me/${WHATSAPP_FIXED}?text=${encodeURIComponent(messages[goal])}`, "_blank");
         }
 
         function consultProduct(id) {
             const p = products.find(x => x.id === id) || PRESET_COMBOS.find(x => x.id === id);
-            const wa = getConsultWhatsapp();
-            const msg = p
-                ? `Hola, quiero consultar por este producto de Cocina Gourmet: ${p.name}. ¿Hay stock?`
-                : `Hola, quiero consultar por los productos de Cocina Gourmet.`;
-            trackEvent('product_consult_click', { product_id: id, product_name: p ? p.name : '' });
-            window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
+            const msg = p ? `Hola, quiero consultar por este producto de Cocina Gourmet: ${p.name}. ¿Hay stock?` : "Hola, quiero consultar por los productos de Cocina Gourmet.";
+            trackEvent("product_click", p ? p.name : "producto", { product_id: id, action: "consult" });
+            trackEvent("consult_product", p ? p.name : "producto", { product_id: id });
+            window.open(`https://wa.me/${WHATSAPP_FIXED}?text=${encodeURIComponent(msg)}`, "_blank");
         }
 
-        function getConsultWhatsapp() {
-            return WHATSAPP_FIXED;
+        function setFilter(id) {
+            currentCat = id;
+            const cat = id === "all" ? "Todos" : (categories.find(c => c.id === id)?.name || id);
+            trackEvent("product_click", `categoria_${cat}`);
+            renderShop();
         }
 
-        function openGeneralConsult() {
-            const wa = getConsultWhatsapp();
-            const msg = 'Hola, quiero consultar por los productos de Cocina Gourmet.';
-            trackEvent('general_consult_click');
-            window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        function setFilter(id) { currentCat = id; trackEvent('category_filter', { category_id: id }); renderShop(); }
-
-        // --- CARRITO ---
         function addToCart(id) {
             const p = products.find(x => x.id === id) || PRESET_COMBOS.find(x => x.id === id);
-            if(!p) return alert("Producto no encontrado.");
+            if (!p) return alert("Producto no encontrado.");
             const item = cart.find(x => x.id === id);
-            if(item) item.qty++; else cart.push({...p, qty: 1});
-            saveCart(); updateCartUI();
-            trackEvent('add_to_cart', { product_id: p.id, product_name: p.name, price: p.price });
-            document.getElementById('added-product-name').innerText = p.name;
-            document.getElementById('modal-added-confirm').classList.remove('hidden');
+            if (item) item.qty++; else cart.push({ ...p, qty: 1 });
+            saveCart();
+            updateCartUI();
+            trackEvent("product_click", p.name, { product_id: p.id, action: "add_to_cart" });
+            trackEvent("add_to_cart", p.name, { product_id: p.id, price: p.price });
+            document.getElementById("added-product-name").innerText = p.name;
+            document.getElementById("modal-added-confirm").classList.remove("hidden");
         }
 
         function addPresetCombo(comboId) {
+            const combo = PRESET_COMBOS.find(c => c.id === comboId);
             addToCart(comboId);
-            trackEvent('combo_added', { combo_id: comboId });
+            trackEvent("combo_add", combo ? combo.name : comboId);
         }
 
-        function saveCart() { localStorage.setItem('cg_cart_v3', JSON.stringify(cart.map(i=>({id:i.id, qty:i.qty})))); }
-        function loadCart() { 
-            const saved = JSON.parse(localStorage.getItem('cg_cart_v3') || '[]');
+        function saveCart() { localStorage.setItem("cg_cart_v10", JSON.stringify(cart.map(i => ({ id: i.id, qty: i.qty })))); }
+        function loadCart() {
+            const saved = JSON.parse(localStorage.getItem("cg_cart_v10") || "[]");
             cart = saved.map(s => {
                 const p = products.find(x => x.id === s.id) || PRESET_COMBOS.find(x => x.id === s.id);
-                return p ? {...p, qty: s.qty} : null;
+                return p ? { ...p, qty: s.qty } : null;
             }).filter(Boolean);
             updateCartUI();
         }
+
         function updateCartUI() {
-            const count = cart.reduce((a, b) => a + b.qty, 0);
-            document.getElementById('cart-count').innerText = count;
-            document.getElementById('cart-count').classList.toggle('hidden', count === 0);
-            const cont = document.getElementById('cart-items');
-            if(cart.length === 0) {
-                cont.innerHTML = `<div class="h-full flex items-center justify-center text-slate-500 font-bold">Tu carrito está vacío</div>`;
+            const count = cart.reduce((a,b) => a + b.qty, 0);
+            document.getElementById("cart-count").innerText = count;
+            document.getElementById("cart-count").classList.toggle("hidden", count === 0);
+            const cont = document.getElementById("cart-items");
+            if (!cart.length) {
+                cont.innerHTML = `<div class="h-full flex items-center justify-center text-center text-slate-500 font-black">Tu carrito está vacío.<br>Agregá un combo para empezar fuerte.</div>`;
             } else {
                 cont.innerHTML = cart.map((i, idx) => `
-                    <div class="flex justify-between items-center bg-slate-800/50 border border-white/5 p-4 rounded-2xl text-sm">
-                        <div class="flex flex-col">
-                            <span class="font-bold text-white">${i.name}</span>
-                            <span class="text-emerald-400 text-xs">$${(i.price * i.qty).toLocaleString()}</span>
+                    <div class="flex justify-between items-center bg-slate-900 border border-white/10 p-4 rounded-2xl text-sm">
+                        <div class="flex flex-col pr-3">
+                            <span class="font-black text-white">${safeText(i.name)}</span>
+                            <span class="text-emerald-400 text-xs font-bold">${money(i.price * i.qty)}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <button onclick="modQty(${idx},-1)" class="bg-slate-700 w-7 h-7 rounded-lg flex items-center justify-center hover:bg-slate-600">-</button>
-                            <span class="w-4 text-center font-bold">${i.qty}</span>
-                            <button onclick="modQty(${idx},1)" class="bg-slate-700 w-7 h-7 rounded-lg flex items-center justify-center hover:bg-slate-600">+</button>
+                            <button onclick="modQty(${idx},-1)" class="bg-slate-800 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-700">-</button>
+                            <span class="w-4 text-center font-black">${i.qty}</span>
+                            <button onclick="modQty(${idx},1)" class="bg-slate-800 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-700">+</button>
                         </div>
                     </div>
-                `).join('');
+                `).join("");
             }
             calculateFinalTotal();
         }
+
         function modQty(idx, d) {
             cart[idx].qty += d;
-            if(cart[idx].qty <= 0) cart.splice(idx,1);
-            saveCart(); updateCartUI();
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            saveCart();
+            updateCartUI();
         }
+
         function calculateFinalTotal() {
-            const sub = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-            const zId = document.getElementById('cust-zone').value;
+            const sub = cart.reduce((a,b) => a + (Number(b.price) * b.qty), 0);
+            const zId = document.getElementById("cust-zone").value;
             const zone = zones.find(z => z.id === zId);
-            const shipping = zone ? parseFloat(zone.shipping_cost) : 0;
-            const total = sub + shipping;
-            document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
+            const shipping = zone ? Number(zone.shipping_cost || 0) : 0;
+            document.getElementById("cart-total").innerText = money(sub + shipping);
         }
-        function toggleCart() {
-            const sidebar = document.getElementById('cart-sidebar');
-            sidebar.classList.toggle('open');
-            const bottomBar = document.getElementById('bottom-buy-bar');
-            if(bottomBar) bottomBar.classList.toggle('hidden', sidebar.classList.contains('open'));
-        }
-        function closeAddedModal() { document.getElementById('modal-added-confirm').classList.add('hidden'); }
 
-        // --- ADMIN RENDERS ---
+        function toggleCart(forceOpen) {
+            const sidebar = document.getElementById("cart-sidebar");
+            const wasOpen = sidebar.classList.contains("open");
+            if (forceOpen === true) sidebar.classList.add("open");
+            else if (forceOpen === false) sidebar.classList.remove("open");
+            else sidebar.classList.toggle("open");
+            const bottomBar = document.getElementById("bottom-buy-bar");
+            if (bottomBar) bottomBar.classList.toggle("hidden", sidebar.classList.contains("open"));
+            if (!wasOpen && sidebar.classList.contains("open")) trackEvent("cart_open");
+        }
+
+        function closeAddedModal() { document.getElementById("modal-added-confirm").classList.add("hidden"); }
+
         function renderAdmin() {
-            const orderCont = document.getElementById('admin-orders');
-            if(orders.length === 0) {
-                orderCont.innerHTML = `<p class="text-center py-10 text-slate-600">No hay pedidos registrados</p>`;
-            } else {
-                orderCont.innerHTML = orders.map(o => `
-                    <div class="bg-slate-800/40 p-4 rounded-xl border border-white/5 hover:border-emerald-500/20 transition-all">
-                        <div class="flex justify-between text-[10px] font-bold text-emerald-400 mb-1 uppercase tracking-wider">
-                            <span>${new Date(o.created_at).toLocaleDateString()}</span>
-                            <span>$${parseFloat(o.total).toLocaleString()}</span>
-                        </div>
-                        <p class="text-xs font-bold text-white mb-1">${o.customer_name}</p>
-                        <p class="text-[9px] text-slate-500 leading-tight">${o.customer_address} <br> <span class="text-emerald-400/80">${o.zone_name}</span></p>
+            document.getElementById("admin-orders").innerHTML = orders.length ? orders.map(o => `
+                <div class="bg-slate-800/40 p-4 rounded-xl border border-white/5 hover:border-emerald-500/20 transition-all">
+                    <div class="flex justify-between text-[10px] font-black text-emerald-400 mb-1 uppercase tracking-wider">
+                        <span>${new Date(o.created_at).toLocaleDateString("es-AR")}</span>
+                        <span>${money(o.total)}</span>
                     </div>
-                `).join('');
-            }
+                    <p class="text-xs font-black text-white mb-1">${safeText(o.customer_name)}</p>
+                    <p class="text-[9px] text-slate-500 leading-tight">${safeText(o.customer_address)}<br><span class="text-emerald-400/80">${safeText(o.zone_name)}</span></p>
+                </div>
+            `).join("") : `<p class="text-center py-10 text-slate-600">No hay pedidos registrados</p>`;
 
-            document.getElementById('admin-products').innerHTML = products.map(p => `
+            document.getElementById("admin-products").innerHTML = products.map(p => `
                 <div class="flex justify-between bg-slate-800/40 p-3 rounded-xl items-center mb-1 border border-white/5">
                     <div class="flex items-center gap-3">
-                        <img src="${p.image_url || ''}" class="w-10 h-10 rounded-lg object-cover border border-white/10" onerror="this.src='https://via.placeholder.com/50'">
+                        <img src="${safeUrl(p.image_url)}" class="w-10 h-10 rounded-lg object-cover border border-white/10" onerror="this.src='https://via.placeholder.com/50'" alt="${safeText(p.name)}">
                         <div class="flex flex-col">
-                            <span class="text-xs font-bold">${p.name}</span>
-                            <span class="text-[10px] text-emerald-400">$${parseFloat(p.price).toLocaleString()}</span>
+                            <span class="text-xs font-black">${safeText(p.name)}</span>
+                            <span class="text-[10px] text-emerald-400">${money(p.price)}</span>
                         </div>
                     </div>
                     <div class="flex gap-1">
-                        <button onclick="editProduct('${p.id}')" class="text-blue-400 p-2 hover:bg-blue-500/10 rounded-lg"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteProduct('${p.id}')" class="text-rose-400 p-2 hover:bg-rose-500/10 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="editProduct('${safeJs(p.id)}')" class="text-blue-400 p-2 hover:bg-blue-500/10 rounded-lg"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteProduct('${safeJs(p.id)}')" class="text-rose-400 p-2 hover:bg-rose-500/10 rounded-lg"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
-            `).join('');
+            `).join("");
 
-            document.getElementById('admin-cats-list').innerHTML = categories.map(c => `
+            document.getElementById("admin-cats-list").innerHTML = categories.map(c => `
                 <span class="bg-slate-800 border border-white/5 px-3 py-1 rounded-full text-xs flex items-center gap-2">
-                    ${c.name} <button onclick="deleteCategory('${c.id}')" class="text-rose-400 font-bold hover:text-rose-300">×</button>
+                    ${safeText(c.name)} <button onclick="deleteCategory('${safeJs(c.id)}')" class="text-rose-400 font-black hover:text-rose-300">×</button>
                 </span>
-            `).join('');
+            `).join("");
 
-            document.getElementById('admin-zones').innerHTML = zones.map(z => `
+            document.getElementById("admin-zones").innerHTML = zones.map(z => `
                 <div class="flex justify-between bg-slate-800/40 p-3 rounded-xl text-[10px] items-center mb-1 border border-white/5">
                     <div class="flex flex-col">
-                        <span class="font-bold text-white uppercase tracking-tight">${z.name}</span>
-                        <span class="text-emerald-400">Envío: $${z.shipping_cost} • WA: ${z.whatsapp}</span>
+                        <span class="font-black text-white uppercase tracking-tight">${safeText(z.name)}</span>
+                        <span class="text-emerald-400">Envío: ${money(z.shipping_cost)} · WA: ${safeText(z.whatsapp)}</span>
                     </div>
                     <div class="flex gap-1">
-                        <button onclick="editZone('${z.id}')" class="text-blue-400 p-2 hover:bg-blue-500/10 rounded-lg"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteZone('${z.id}')" class="text-rose-400 p-2 hover:bg-rose-500/10 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="editZone('${safeJs(z.id)}')" class="text-blue-400 p-2 hover:bg-blue-500/10 rounded-lg"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteZone('${safeJs(z.id)}')" class="text-rose-400 p-2 hover:bg-rose-500/10 rounded-lg"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
-            `).join('');
+            `).join("");
         }
 
-        // --- ZONAS ---
         function editZone(id) {
             const z = zones.find(x => x.id === id);
-            if(!z) return;
-            document.getElementById('z-id').value = z.id;
-            document.getElementById('new-zone-name').value = z.name;
-            document.getElementById('new-zone-cost').value = z.shipping_cost;
-            document.getElementById('new-zone-wa').value = z.whatsapp;
-            document.getElementById('zone-form-title').innerText = "Editando Zona";
-            document.getElementById('btn-cancel-zone').classList.remove('hidden');
+            if (!z) return;
+            document.getElementById("z-id").value = z.id;
+            document.getElementById("new-zone-name").value = z.name;
+            document.getElementById("new-zone-cost").value = z.shipping_cost;
+            document.getElementById("new-zone-wa").value = z.whatsapp;
+            document.getElementById("zone-form-title").innerText = "Editando zona";
+            document.getElementById("btn-cancel-zone").classList.remove("hidden");
         }
 
         function resetZoneForm() {
-            document.getElementById('z-id').value = "";
-            document.getElementById('new-zone-name').value = "";
-            document.getElementById('new-zone-cost').value = "";
-            document.getElementById('new-zone-wa').value = "";
-            document.getElementById('zone-form-title').innerText = "Nueva Zona";
-            document.getElementById('btn-cancel-zone').classList.add('hidden');
+            document.getElementById("z-id").value = "";
+            document.getElementById("new-zone-name").value = "";
+            document.getElementById("new-zone-cost").value = "";
+            document.getElementById("new-zone-wa").value = "";
+            document.getElementById("zone-form-title").innerText = "Nueva zona";
+            document.getElementById("btn-cancel-zone").classList.add("hidden");
         }
 
         async function saveZone() {
-            const id = document.getElementById('z-id').value;
-            const name = document.getElementById('new-zone-name').value.trim();
-            const cost = document.getElementById('new-zone-cost').value;
-            const wa = document.getElementById('new-zone-wa').value.trim();
-            if(!name || !cost || !wa) return alert("Completa todos los campos de la zona.");
-
+            const id = document.getElementById("z-id").value;
+            const name = document.getElementById("new-zone-name").value.trim();
+            const cost = document.getElementById("new-zone-cost").value;
+            const wa = document.getElementById("new-zone-wa").value.trim();
+            if (!name || !cost || !wa) return alert("Completa todos los campos de la zona.");
             const data = { name, shipping_cost: parseFloat(cost), whatsapp: wa };
-            if(id) await sb.from('zones').update(data).eq('id', id);
-            else await sb.from('zones').insert([data]);
-            
+            if (id) await sb.from("zones").update(data).eq("id", id);
+            else await sb.from("zones").insert([data]);
             resetZoneForm();
             loadAllData();
         }
 
-        async function deleteZone(id) { if(confirm("¿Eliminar zona definitivamente?")) { await sb.from('zones').delete().eq('id', id); loadAllData(); } }
+        async function deleteZone(id) { if (confirm("¿Eliminar zona definitivamente?")) { await sb.from("zones").delete().eq("id", id); loadAllData(); } }
 
-        // --- PRODUCTOS ---
         function openProductModal() {
-            document.getElementById('modal-product-title').innerText = "Nuevo Producto";
-            document.getElementById('form-product').reset();
-            document.getElementById('p-id').value = "";
-            document.getElementById('p-img-base64').value = "";
-            document.getElementById('p-img-preview').classList.add('hidden');
-            document.getElementById('p-cat').innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            document.getElementById('modal-product').classList.remove('hidden');
+            document.getElementById("modal-product-title").innerText = "Nuevo producto";
+            document.getElementById("form-product").reset();
+            document.getElementById("p-id").value = "";
+            document.getElementById("p-img-base64").value = "";
+            document.getElementById("p-img-preview").classList.add("hidden");
+            document.getElementById("p-cat").innerHTML = categories.map(c => `<option value="${safeText(c.id)}">${safeText(c.name)}</option>`).join("");
+            document.getElementById("modal-product").classList.remove("hidden");
         }
 
         function editProduct(id) {
             const p = products.find(x => x.id === id);
-            if(!p) return;
-            document.getElementById('modal-product-title').innerText = "Editar Producto";
-            document.getElementById('p-id').value = p.id;
-            document.getElementById('p-name').value = p.name;
-            document.getElementById('p-price').value = p.price;
-            document.getElementById('p-img-base64').value = p.image_url || '';
-            document.getElementById('p-cat').innerHTML = categories.map(c => `<option value="${c.id}" ${c.id === p.category_id ? 'selected' : ''}>${c.name}</option>`).join('');
-            if(p.image_url) { document.getElementById('p-img-tag').src = p.image_url; document.getElementById('p-img-preview').classList.remove('hidden'); }
-            document.getElementById('modal-product').classList.remove('hidden');
+            if (!p) return;
+            document.getElementById("modal-product-title").innerText = "Editar producto";
+            document.getElementById("p-id").value = p.id;
+            document.getElementById("p-name").value = p.name;
+            document.getElementById("p-price").value = p.price;
+            document.getElementById("p-img-base64").value = p.image_url || "";
+            document.getElementById("p-cat").innerHTML = categories.map(c => `<option value="${safeText(c.id)}" ${c.id === p.category_id ? "selected" : ""}>${safeText(c.name)}</option>`).join("");
+            if (p.image_url) { document.getElementById("p-img-tag").src = p.image_url; document.getElementById("p-img-preview").classList.remove("hidden"); }
+            document.getElementById("modal-product").classList.remove("hidden");
         }
 
-        function closeProductModal() { document.getElementById('modal-product').classList.add('hidden'); }
+        function closeProductModal() { document.getElementById("modal-product").classList.add("hidden"); }
 
-        document.getElementById('form-product').onsubmit = async (e) => {
+        document.getElementById("form-product").onsubmit = async (e) => {
             e.preventDefault();
-            const id = document.getElementById('p-id').value;
+            const id = document.getElementById("p-id").value;
             const data = {
-                name: document.getElementById('p-name').value,
-                price: parseFloat(document.getElementById('p-price').value),
-                category_id: document.getElementById('p-cat').value,
-                image_url: document.getElementById('p-img-base64').value
+                name: document.getElementById("p-name").value.trim(),
+                price: parseFloat(document.getElementById("p-price").value),
+                category_id: document.getElementById("p-cat").value,
+                image_url: document.getElementById("p-img-base64").value
             };
-            if(id) await sb.from('products').update(data).eq('id', id);
-            else await sb.from('products').insert([data]);
-            closeProductModal(); loadAllData();
+            if (id) await sb.from("products").update(data).eq("id", id);
+            else await sb.from("products").insert([data]);
+            closeProductModal();
+            loadAllData();
         };
 
-        async function deleteProduct(id) { if(confirm("¿Eliminar producto?")) { await sb.from('products').delete().eq('id', id); loadAllData(); } }
+        async function deleteProduct(id) { if (confirm("¿Eliminar producto?")) { await sb.from("products").delete().eq("id", id); loadAllData(); } }
         async function addCategory() {
-            const name = document.getElementById('new-cat-name').value.trim();
-            if(!name) return;
-            await sb.from('categories').insert([{ name }]);
-            document.getElementById('new-cat-name').value = '';
+            const name = document.getElementById("new-cat-name").value.trim();
+            if (!name) return;
+            await sb.from("categories").insert([{ name }]);
+            document.getElementById("new-cat-name").value = "";
             loadAllData();
         }
-        async function deleteCategory(id) { if(confirm("¿Eliminar categoría?")) { await sb.from('categories').delete().eq('id', id); loadAllData(); } }
+        async function deleteCategory(id) { if (confirm("¿Eliminar categoría?")) { await sb.from("categories").delete().eq("id", id); loadAllData(); } }
 
-        // --- VISTAS ---
         function showView(v) {
-            document.getElementById('view-shop').classList.toggle('hidden', v !== 'shop');
-            document.getElementById('view-admin').classList.toggle('hidden', v !== 'admin');
-            if(v === 'shop') loadAllData(); 
+            document.getElementById("view-shop").classList.toggle("hidden", v !== "shop");
+            document.getElementById("view-admin").classList.toggle("hidden", v !== "admin");
+            if (v === "shop" && sb) loadAllData();
+            if (v === "admin") { renderAdmin(); renderAnalyticsStats(); loadDailyAnalyticsStats(); }
         }
 
         function checkAdminAccess() {
-            if (isViewAdminUnlocked) showView('admin');
-            else document.getElementById('modal-admin-login').classList.remove('hidden');
+            if (isViewAdminUnlocked) showView("admin");
+            else document.getElementById("modal-admin-login").classList.remove("hidden");
         }
 
         async function attemptAdminLogin() {
-            if(!ADMIN_PASSWORD) await loadAdminPasswordFromConfig();
-
-            const enteredPassword = document.getElementById('admin-password').value.trim();
-
-            if(!ADMIN_PASSWORD) {
+            if (!ADMIN_PASSWORD) await loadAdminPasswordFromConfig();
+            const enteredPassword = document.getElementById("admin-password").value.trim();
+            if (!ADMIN_PASSWORD) {
                 alert("No se pudo cargar la contraseña desde la base de datos. Revisá la tabla config.");
+                await trackEvent("admin_login_error", "sin_password_config");
                 return;
             }
-
-            if(enteredPassword === ADMIN_PASSWORD) {
+            if (enteredPassword === ADMIN_PASSWORD) {
                 isViewAdminUnlocked = true;
-                document.getElementById('admin-password').value = '';
+                document.getElementById("admin-password").value = "";
                 closeAdminLogin();
-                showView('admin');
+                await trackEvent("admin_login_success");
+                showView("admin");
             } else {
+                await trackEvent("admin_login_error", "password_incorrecta");
                 alert("Contraseña de administrador incorrecta");
             }
         }
 
-        function closeAdminLogin() { document.getElementById('modal-admin-login').classList.add('hidden'); }
-        function logoutAdmin() { isViewAdminUnlocked = false; showView('shop'); }
+        function closeAdminLogin() { document.getElementById("modal-admin-login").classList.add("hidden"); }
+        function logoutAdmin() { isViewAdminUnlocked = false; showView("shop"); }
 
-        // --- CHECKOUT ---
         function showCheckout() {
-            if(cart.length === 0) return;
-            trackEvent('checkout_started', { cart_items: cart.reduce((a,b)=>a+b.qty,0), cart_total: cart.reduce((a,b)=>a+(b.price*b.qty),0) });
-            document.getElementById('checkout-form').classList.remove('hidden');
-            document.getElementById('btn-next').classList.add('hidden');
-            document.getElementById('btn-submit').classList.remove('hidden');
-            document.getElementById('bank-info-txt').innerText = localStorage.getItem('cg_bank_info') || "Contactar para datos bancarios.";
+            if (!cart.length) return;
+            const zone = zones.find(z => z.id === document.getElementById("cust-zone").value);
+            trackEvent("checkout_start", zone ? zone.name : "general", { cart_items: cart.reduce((a,b)=>a+b.qty,0), zone_name: zone ? zone.name : "" });
+            document.getElementById("checkout-form").classList.remove("hidden");
+            document.getElementById("btn-next").classList.add("hidden");
+            document.getElementById("btn-submit").classList.remove("hidden");
+            document.getElementById("bank-info-txt").innerText = localStorage.getItem("cg_bank_info") || "Contactar para datos bancarios.";
         }
 
         function updateCheckoutUI() {
-            document.getElementById('cust-zone').innerHTML = zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
+            document.getElementById("cust-zone").innerHTML = zones.map(z => `<option value="${safeText(z.id)}">${safeText(z.name)} · envío ${money(z.shipping_cost)}</option>`).join("");
             calculateFinalTotal();
         }
 
-        function updatePaymentUI() { 
-            const isTransfer = document.getElementById('cust-payment').value === 'transferencia';
-            document.getElementById('bank-data').classList.toggle('hidden', !isTransfer); 
+        function updatePaymentUI() {
+            const isTransfer = document.getElementById("cust-payment").value === "transferencia";
+            document.getElementById("bank-data").classList.toggle("hidden", !isTransfer);
+        }
+
+        function trackZoneSelected() {
+            const zone = zones.find(z => z.id === document.getElementById("cust-zone").value);
+            if (zone) trackEvent("checkout_start", zone.name, { zone_name: zone.name, action: "zone_selected" });
         }
 
         async function processOrder() {
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
-            const email = document.getElementById('cust-email').value.trim();
-            const optin = document.getElementById('cust-optin').checked;
-            const address = document.getElementById('cust-address').value.trim();
-            const payment = document.getElementById('cust-payment').value;
-            if(!name || !phone || !address) return alert("Por favor, completa tu nombre, WhatsApp y dirección de entrega.");
-            
-            const zone = zones.find(z => z.id === document.getElementById('cust-zone').value);
-            if(!zone) return alert("Debes seleccionar una zona de envío.");
-            
-            const totalStr = document.getElementById('cart-total').innerText;
-            const totalNum = parseFloat(totalStr.replace('$', '').replace(/\./g, ''));
-            
-            // Guardar en Supabase
+            const name = document.getElementById("cust-name").value.trim();
+            const phone = document.getElementById("cust-phone").value.trim();
+            const email = document.getElementById("cust-email").value.trim();
+            const optin = document.getElementById("cust-optin").checked;
+            const address = document.getElementById("cust-address").value.trim();
+            const payment = document.getElementById("cust-payment").value;
+            if (!name || !phone || !address) return alert("Por favor, completa tu nombre, WhatsApp y dirección de entrega.");
+            const zone = zones.find(z => z.id === document.getElementById("cust-zone").value);
+            if (!zone) return alert("Debes seleccionar una zona de envío.");
+            const sub = cart.reduce((a,b) => a + (Number(b.price) * b.qty), 0);
+            const totalNum = sub + Number(zone.shipping_cost || 0);
             try {
-                await sb.from('orders').insert([{
-                    customer_name: name, customer_address: address, zone_name: zone.name,
+                if (sb) await sb.from("orders").insert([{
+                    customer_name: name,
+                    customer_address: address,
+                    zone_name: zone.name,
                     items: JSON.stringify({
                         cart: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
                         customer: { phone, email, optin },
-                        tracking: { referrer: document.referrer || 'directo', created_at: new Date().toISOString() }
+                        tracking: { referrer: document.referrer || "directo", created_at: new Date().toISOString() }
                     }),
                     total: totalNum
                 }]);
-            } catch(e) { console.warn("Fallo al guardar copia de orden en DB:", e); }
+            } catch (e) { console.warn("Fallo al guardar copia de orden en DB:", e); }
 
-            // Mensaje WhatsApp
             let msg = `*NUEVO PEDIDO - COCINA GOURMET*\n`;
             msg += `--------------------------\n`;
             msg += `*Cliente:* ${name}\n`;
+            msg += `*Teléfono:* ${phone}\n`;
             msg += `*Dirección:* ${address}\n`;
             msg += `*Zona:* ${zone.name}\n`;
-            msg += `*Pago:* ${payment === 'efectivo' ? 'EFECTIVO AL RECIBIR' : 'TRANSFERENCIA BANCARIA'}\n`;
+            msg += `*Pago:* ${payment === "efectivo" ? "EFECTIVO AL RECIBIR" : "TRANSFERENCIA BANCARIA"}\n`;
             msg += `--------------------------\n`;
-            cart.forEach(i => msg += `• ${i.qty}x ${i.name} ($${(i.price*i.qty).toLocaleString()})\n`);
+            cart.forEach(i => msg += `• ${i.qty}x ${i.name} (${money(i.price * i.qty)})\n`);
             msg += `--------------------------\n`;
-            msg += `*Envío:* $${parseFloat(zone.shipping_cost).toLocaleString()}\n`;
-            msg += `*TOTAL A PAGAR: ${totalStr}*\n\n`;
-            
-            if(payment === 'transferencia') {
-                msg += `_Solicito validar los datos para la transferencia bancaria._`;
-            }
+            msg += `*Envío:* ${money(zone.shipping_cost)}\n`;
+            msg += `*TOTAL A PAGAR: ${money(totalNum)}*\n\n`;
+            if (payment === "transferencia") msg += `_Solicito validar los datos para la transferencia bancaria._`;
+            await trackEvent("order_whatsapp", zone.name, { total: totalNum, zone_name: zone.name, payment, customer_has_email: !!email, optin });
+            window.open(`https://wa.me/${WHATSAPP_FIXED}?text=${encodeURIComponent(msg)}`, "_blank");
 
-            trackEvent('whatsapp_order', { total: totalNum, zone_name: zone.name, payment, customer_has_email: !!email, optin });
-            window.open(`https://wa.me/${WHATSAPP_FIXED}?text=${encodeURIComponent(msg)}`, '_blank');
-            
-            // Cleanup
-            cart = []; saveCart(); loadAllData(); toggleCart();
-            document.getElementById('checkout-form').classList.add('hidden');
-            document.getElementById('btn-next').classList.remove('hidden');
-            document.getElementById('btn-submit').classList.add('hidden');
-            document.getElementById('cust-name').value = '';
-            document.getElementById('cust-phone').value = '';
-            document.getElementById('cust-email').value = '';
-            document.getElementById('cust-address').value = '';
-            document.getElementById('cust-optin').checked = false;
-            alert("✅ ¡Pedido enviado correctamente!");
+            cart = [];
+            saveCart();
+            loadAllData();
+            toggleCart(false);
+            document.getElementById("checkout-form").classList.add("hidden");
+            document.getElementById("btn-next").classList.remove("hidden");
+            document.getElementById("btn-submit").classList.add("hidden");
+            ["cust-name","cust-phone","cust-email","cust-address"].forEach(id => document.getElementById(id).value = "");
+            document.getElementById("cust-optin").checked = false;
+            alert("Pedido enviado correctamente.");
         }
     </script>
 </body>
