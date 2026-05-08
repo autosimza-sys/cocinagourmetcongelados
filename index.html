@@ -510,9 +510,36 @@
         let searchDebounce = null;
 
         const PRESET_COMBOS = [
-            { id: "combo_freezer", name: "Combo Freezer", price: 97000, old_price: 117000, image_url: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?auto=format&fit=crop&w=900&q=80", description: "Incluye: 3 pizzas muzzarella grandes + 2 packs de empanadas x6 + 2 tartines individuales. Ideal para 5 a 7 comidas rápidas.", bullets: ["3 pizzas muzzarella grandes", "2 packs de empanadas x6", "2 tartines individuales", "5 a 7 comidas rápidas"] },
-            { id: "combo_familiar", name: "Combo Familiar", price: 75000, old_price: 89000, image_url: "https://images.unsplash.com/photo-1601924582975-7e9e1df4b8d7?auto=format&fit=crop&w=900&q=80", description: "Incluye: 2 pizzas grandes + 2 packs de empanadas x6 + 2 tartines individuales. Pensado para almuerzo o cena familiar.", bullets: ["2 pizzas grandes", "2 packs de empanadas x6", "2 tartines individuales", "Compra práctica para casa"] },
-            { id: "combo_revendedor", name: "Combo Revendedor", price: 125000, old_price: 150000, image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80", description: "Mix inicial de productos congelados con pizzas, empanadas y tartines. Ideal para almacenes, hostels y comercios.", bullets: ["Mix inicial congelado", "Pizzas, empanadas y tartines", "Fácil de cocinar y revender", "Ideal negocio o hostel"] }
+            {
+                id: "promo_3_pizzas",
+                badge: "Promo imperdible",
+                name: "3 pizzas muzzarella grandes",
+                price: 22500,
+                old_price: 27000,
+                image_url: "",
+                description: "3 pizzas muzzarella grandes de 35 cm, 8 porciones, listas para hornear.",
+                bullets: ["3 pizzas muzzarella grandes", "35 cm · 8 porciones cada una", "Producto congelado listo para hornear", "Ahorrás frente al precio unitario"]
+            },
+            {
+                id: "pack_5_viandas",
+                badge: "Promo semanal",
+                name: "Pack x5 viandas a elección",
+                price: 45000,
+                old_price: 0,
+                image_url: "",
+                description: "Cinco viandas caseras congeladas a elección, cocinadas para descongelar y calentar.",
+                bullets: ["5 viandas caseras congeladas", "Pastas, platos caseros, minutas o tartas", "Elegís variedades disponibles", "Ideal para almuerzos de la semana"]
+            },
+            {
+                id: "pack_10_viandas",
+                badge: "Freezer lleno",
+                name: "Pack x10 viandas a elección",
+                price: 85000,
+                old_price: 0,
+                image_url: "",
+                description: "Diez viandas caseras congeladas a elección para tener comidas listas en el freezer.",
+                bullets: ["10 viandas caseras congeladas", "Cocinadas para descongelar", "Elegís variedades disponibles", "La opción más práctica para la semana"]
+            }
         ];
 
         window.onload = () => initApp();
@@ -834,17 +861,31 @@
             grid.innerHTML = PRESET_COMBOS.map(combo => `
                 <div class="combo-card glass rounded-3xl overflow-hidden sale-card">
                     <div class="relative z-10">
-                        <img src="${safeUrl(combo.image_url)}" alt="${safeText(combo.name)}" class="w-full h-44 object-cover">
+                        ${combo.image_url ? `
+                            <img src="${safeUrl(combo.image_url)}" alt="${safeText(combo.name)}" class="w-full h-44 object-cover">
+                        ` : `
+                            <div class="h-44 bg-slate-950/70 border-b border-white/10 p-5 flex flex-col justify-between">
+                                <div>
+                                    <p class="text-[10px] text-emerald-400 uppercase font-black tracking-[0.22em] mb-2">Cocina Gourmet</p>
+                                    <h4 class="text-2xl font-black leading-tight text-white">${safeText(combo.name)}</h4>
+                                </div>
+                                <div class="flex items-center justify-between text-xs text-slate-300">
+                                    <span><i class="fa-solid fa-snowflake text-sky-300 mr-1"></i> Congelado</span>
+                                    <span><i class="fa-solid fa-fire-burner text-amber-300 mr-1"></i> Listo para calentar</span>
+                                </div>
+                            </div>
+                        `}
                         <div class="p-6">
-                            <p class="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-2">${combo.id === "combo_freezer" ? "Más vendido" : combo.id === "combo_revendedor" ? "Negocio" : "Para compartir"}</p>
+                            <p class="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-2">${safeText(combo.badge || "Promo")}</p>
                             <h3 class="text-xl font-black mb-2">${safeText(combo.name)}</h3>
+                            <p class="text-sm text-slate-400 mb-4">${safeText(combo.description)}</p>
                             <ul class="text-sm text-slate-300 space-y-1 mb-4">${combo.bullets.map(b => `<li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>${safeText(b)}</li>`).join("")}</ul>
                             <div class="flex items-end justify-between gap-3 mb-5">
                                 <div>
-                                    <p class="text-slate-500 line-through text-sm">${money(combo.old_price)}</p>
+                                    ${combo.old_price && combo.old_price > combo.price ? `<p class="text-slate-500 line-through text-sm">${money(combo.old_price)}</p>` : `<p class="text-slate-500 text-sm">Precio promo</p>`}
                                     <p class="combo-price text-3xl font-black text-emerald-400">${money(combo.price)}</p>
                                 </div>
-                                <p class="text-xs text-amber-300 font-black text-right">Ahorrás ${money(combo.old_price - combo.price)}</p>
+                                ${combo.old_price && combo.old_price > combo.price ? `<p class="text-xs text-amber-300 font-black text-right">Ahorrás ${money(combo.old_price - combo.price)}</p>` : `<p class="text-xs text-slate-400 font-black text-right">Confirmá variedades por WhatsApp</p>`}
                             </div>
                             <button onclick="addPresetCombo('${safeJs(combo.id)}')" class="btn-primary w-full py-3 rounded-2xl font-black text-white">Agregar combo</button>
                         </div>
@@ -1253,7 +1294,10 @@
             msg += `*Zona:* ${zone.name}\n`;
             msg += `*Pago:* ${payment === "efectivo" ? "EFECTIVO AL RECIBIR" : "TRANSFERENCIA BANCARIA"}\n`;
             msg += `--------------------------\n`;
-            cart.forEach(i => msg += `• ${i.qty}x ${i.name} (${money(i.price * i.qty)})\n`);
+            cart.forEach(i => {
+                const note = String(i.id || "").includes("viandas") ? " - variedades a elección" : "";
+                msg += `• ${i.qty}x ${i.name}${note} (${money(i.price * i.qty)})\n`;
+            });
             msg += `--------------------------\n`;
             msg += `*Envío:* ${money(zone.shipping_cost)}\n`;
             msg += `*TOTAL A PAGAR: ${money(totalNum)}*\n\n`;
