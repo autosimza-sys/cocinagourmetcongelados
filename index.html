@@ -23,6 +23,10 @@
     <meta name="twitter:title" content="Cocina Gourmet Congelados en Mendoza">
     <meta name="twitter:description" content="Comida casera congelada: pizzas, empanadas, tartines y viandas listas para calentar.">
     <meta name="twitter:image" content="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1200&q=85">
+    <link rel="preconnect" href="https://peoimydvofprzemjvyzg.supabase.co">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -342,7 +346,7 @@
                     </div>
                     <div class="glass-strong rounded-[2rem] overflow-hidden">
                         <div class="relative">
-                            <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1200&q=85" alt="Pizza muzzarella grande lista para hornear" class="w-full h-72 md:h-96 object-cover">
+                            <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1200&q=85" alt="Pizza muzzarella grande lista para hornear" class="w-full h-72 md:h-96 object-cover" fetchpriority="high" decoding="async">
                             <div class="absolute top-4 left-4 bg-slate-950/88 border border-white/15 rounded-2xl px-4 py-3 shadow-2xl">
                                 <p class="text-[10px] uppercase tracking-[.2em] text-emerald-400 font-black">Promo imperdible</p>
                                 <p class="text-3xl font-black text-white leading-none">$22.500</p>
@@ -680,6 +684,8 @@
         let currentCat = "all", isViewAdminUnlocked = false, searchTerm = "";
         let analyticsTableAvailable = false;
         let searchDebounce = null;
+        let lastStorefrontLoadAt = 0;
+        const CATALOG_CACHE_KEY = "cg_catalog_cache_v11_fast";
 
         const PRESET_COMBOS = [
             {
@@ -740,6 +746,46 @@
             if (/^(https?:\/\/|data:image\/)/i.test(url)) return safeText(url);
             return "";
         }
+        function saveCatalogCache() {
+            try {
+                localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify({
+                    saved_at: Date.now(),
+                    products,
+                    categories,
+                    zones
+                }));
+            } catch (e) {
+                console.warn("No se pudo guardar caché de catálogo.", e);
+            }
+        }
+        function loadCatalogCache() {
+            try {
+                const cached = JSON.parse(localStorage.getItem(CATALOG_CACHE_KEY) || "null");
+                if (!cached || !Array.isArray(cached.products)) return false;
+                products = cached.products || [];
+                categories = cached.categories || [];
+                zones = cached.zones || [];
+                renderPresetCombos();
+                renderShop();
+                updateCheckoutUI();
+                loadCart();
+                return products.length > 0;
+            } catch (e) {
+                return false;
+            }
+        }
+        function renderCatalogLoading() {
+            const grid = document.getElementById("products-grid");
+            if (!grid) return;
+            grid.innerHTML = Array.from({ length: 8 }).map(() => `
+                <div class="glass product-card p-3 md:p-4 rounded-3xl h-full animate-pulse">
+                    <div class="img-container mb-3 md:mb-4"></div>
+                    <div class="h-4 bg-slate-700/70 rounded mb-2"></div>
+                    <div class="h-4 bg-slate-700/40 rounded w-2/3 mb-4"></div>
+                    <div class="h-11 bg-slate-800 rounded-2xl"></div>
+                </div>
+            `).join("");
+        }
 
         async function initApp() {
             const savedUrl = localStorage.getItem("cg_db_url") || DEFAULT_URL;
@@ -747,9 +793,10 @@
             document.getElementById("conf-db-url").value = savedUrl;
             document.getElementById("conf-db-key").value = savedKey;
             document.getElementById("conf-bank-info").value = localStorage.getItem("cg_bank_info") || "Banco:\nCBU:\nAlias:";
+            renderPresetCombos();
+            if (!loadCatalogCache()) renderCatalogLoading();
             loadCart();
             await connectDB(savedUrl, savedKey);
-            await trackEvent("page_view");
         }
 
         async function connectDB(url, key) {
@@ -758,10 +805,14 @@
                 const { error } = await sb.from("categories").select("id").limit(1);
                 if (error) throw error;
                 updateDBIndicator(true);
-                await loadAdminPasswordFromConfig();
-                await loadBankInfoFromConfig();
-                await checkAnalyticsTable();
-                await loadAllData();
+                await loadStorefrontData();
+                loadAdminPasswordFromConfig();
+                loadBankInfoFromConfig();
+                checkAnalyticsTable().then(() => {
+                    trackEvent("page_view");
+                    loadDailyAnalyticsStats();
+                });
+                loadOrdersData();
                 document.getElementById("stat-db-ping").innerText = "ACTIVA";
                 document.getElementById("stat-db-ping").className = "text-[10px] font-black text-emerald-400 uppercase";
                 return true;
@@ -833,28 +884,77 @@
             }
         }
 
-        async function loadAllData() {
+        async function loadStorefrontData(force = false) {
             if (!sb) return;
+            if (!force && Date.now() - lastStorefrontLoadAt < 30000 && products.length) return;
             try {
-                const [p, c, z, o] = await Promise.all([
-                    sb.from("products").select("*").order("name"),
-                    sb.from("categories").select("*").order("name"),
-                    sb.from("zones").select("*").order("name"),
-                    sb.from("orders").select("*").order("created_at", { ascending: false }).limit(30)
+                const [p, c, z] = await Promise.all([
+                    sb.from("products").select("id,name,price,category_id,created_at").order("name"),
+                    sb.from("categories").select("id,name,created_at").order("name"),
+                    sb.from("zones").select("id,name,shipping_cost,whatsapp,created_at").order("name")
                 ]);
                 products = p.data || [];
                 categories = c.data || [];
                 zones = z.data || [];
-                orders = o.data || [];
+                lastStorefrontLoadAt = Date.now();
+                saveCatalogCache();
                 renderPresetCombos();
                 renderShop();
-                renderAdmin();
                 updateCheckoutUI();
                 loadCart();
                 updateStats();
-                renderAnalyticsStats();
-                loadDailyAnalyticsStats();
-            } catch (e) { console.error("Error cargando tablas:", e); }
+                loadProductImages();
+            } catch (e) {
+                console.error("Error cargando catálogo:", e);
+                if (!products.length) {
+                    const grid = document.getElementById("products-grid");
+                    if (grid) grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-500 font-black">No se pudo cargar el catálogo. Probá recargar o consultanos por WhatsApp.</div>`;
+                }
+            }
+        }
+
+        async function loadOrdersData() {
+            if (!sb) return;
+            try {
+                const { data, error } = await sb.from("orders").select("*").order("created_at", { ascending: false }).limit(30);
+                if (error) throw error;
+                orders = data || [];
+                renderAdmin();
+                updateStats();
+            } catch (e) { console.error("Error cargando pedidos:", e); }
+        }
+
+        async function loadProductImages() {
+            if (!sb || !products.length) return;
+            try {
+                const { data, error } = await sb.from("products").select("id,image_url").not("image_url", "is", null);
+                if (error) throw error;
+                const imagesById = (data || []).reduce((acc, item) => {
+                    acc[item.id] = item.image_url || "";
+                    return acc;
+                }, {});
+                let changed = false;
+                products = products.map(product => {
+                    if (imagesById[product.id] && product.image_url !== imagesById[product.id]) {
+                        changed = true;
+                        return { ...product, image_url: imagesById[product.id] };
+                    }
+                    return product;
+                });
+                if (changed) {
+                    saveCatalogCache();
+                    renderShop();
+                }
+            } catch (e) {
+                console.warn("No se pudieron cargar imágenes de productos.", e);
+            }
+        }
+
+        async function loadAllData() {
+            await loadStorefrontData(true);
+            await loadOrdersData();
+            renderAnalyticsStats();
+            loadDailyAnalyticsStats();
         }
 
         function updateStats() {
@@ -1034,7 +1134,7 @@
                 <div class="combo-card glass rounded-3xl overflow-hidden sale-card">
                     <div class="relative z-10">
                         ${combo.image_url ? `
-                            <img src="${safeUrl(combo.image_url)}" alt="${safeText(combo.name)}" class="w-full h-44 object-cover">
+                            <img src="${safeUrl(combo.image_url)}" alt="${safeText(combo.name)}" class="w-full h-44 object-cover" loading="lazy" decoding="async">
                         ` : `
                             <div class="h-44 bg-slate-950/70 border-b border-white/10 p-5 flex flex-col justify-between">
                                 <div>
@@ -1094,7 +1194,7 @@
             grid.innerHTML = filtered.map(p => `
                 <div class="glass product-card p-3 md:p-4 rounded-3xl flex flex-col group pop-in border border-white/5 hover:border-emerald-500/30 transition-all h-full">
                     <div class="img-container mb-3 md:mb-4 shadow-xl">
-                        <img src="${safeUrl(p.image_url)}" alt="${safeText(p.name)}" onerror="this.src='https://via.placeholder.com/400?text=Cocina+Gourmet'">
+                        <img src="${safeUrl(p.image_url)}" alt="${safeText(p.name)}" loading="lazy" decoding="async" onerror="this.src='https://via.placeholder.com/400?text=Cocina+Gourmet'">
                     </div>
                     <h3 class="product-title font-black mb-1 text-slate-100">${safeText(p.name)}</h3>
                     ${(p.name || "").toLowerCase().includes("tartin") || (p.name || "").toLowerCase().includes("tartín") ? `<p class="text-xs text-slate-400 mb-2">Porción individual · Lista para calentar</p>` : ""}
@@ -1254,7 +1354,7 @@
             document.getElementById("admin-products").innerHTML = products.map(p => `
                 <div class="flex justify-between bg-slate-800/40 p-3 rounded-xl items-center mb-1 border border-white/5">
                     <div class="flex items-center gap-3">
-                        <img src="${safeUrl(p.image_url)}" class="w-10 h-10 rounded-lg object-cover border border-white/10" onerror="this.src='https://via.placeholder.com/50'" alt="${safeText(p.name)}">
+                        <img src="${safeUrl(p.image_url)}" class="w-10 h-10 rounded-lg object-cover border border-white/10" loading="lazy" decoding="async" onerror="this.src='https://via.placeholder.com/50'" alt="${safeText(p.name)}">
                         <div class="flex flex-col">
                             <span class="text-xs font-black">${safeText(p.name)}</span>
                             <span class="text-[10px] text-emerald-400">${money(p.price)}</span>
@@ -1375,8 +1475,8 @@
         function showView(v) {
             document.getElementById("view-shop").classList.toggle("hidden", v !== "shop");
             document.getElementById("view-admin").classList.toggle("hidden", v !== "admin");
-            if (v === "shop" && sb) loadAllData();
-            if (v === "admin") { renderAdmin(); renderAnalyticsStats(); loadDailyAnalyticsStats(); }
+            if (v === "shop" && sb) loadStorefrontData();
+            if (v === "admin") { loadOrdersData(); renderAdmin(); renderAnalyticsStats(); loadDailyAnalyticsStats(); }
         }
 
         function checkAdminAccess() {
