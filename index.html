@@ -235,10 +235,9 @@
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-sm"></i>
             </div>
             <button onclick="focusSearch()" class="p-2 text-slate-400 hover:text-white transition-all" title="Buscar productos"><i class="fa-solid fa-magnifying-glass text-xl"></i></button>
-            <button onclick="showView('shop')" class="p-2 text-slate-400 hover:text-white transition-all" title="Tienda"><i class="fa-solid fa-house text-xl"></i></button>
             <button onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'}); trackEvent('product_click', 'nav_catalogo')" class="btn-dark px-3 py-2 rounded-xl text-sm font-black text-white flex items-center gap-2" title="Ver catálogo">
                 <i class="fa-solid fa-list text-emerald-400"></i>
-                <span class="hidden sm:inline">Catálogo</span>
+                <span>Catálogo</span>
             </button>
             <button onclick="toggleCart()" class="relative btn-dark p-3 rounded-xl">
                 <i class="fa-solid fa-basket-shopping text-emerald-400 text-xl"></i>
