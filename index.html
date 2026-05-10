@@ -543,6 +543,7 @@
                     </div>
                     <div class="flex flex-col md:flex-row gap-2">
                         <span id="ana-db-status" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-black">DB: verificando</span>
+                        <button onclick="refreshAdminStats()" class="btn-dark text-slate-300 px-4 py-2 rounded-xl text-xs font-black">Actualizar estadísticas</button>
                         <button onclick="resetLocalAnalytics()" class="btn-dark text-slate-300 px-4 py-2 rounded-xl text-xs font-black">Reiniciar estadísticas locales</button>
                     </div>
                 </div>
@@ -568,6 +569,10 @@
                 <div class="lg:col-span-2 space-y-6">
                     <div class="glass p-6 rounded-2xl">
                         <h3 class="font-black text-emerald-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-receipt"></i> Últimos pedidos</h3>
+                        <div class="flex gap-2 mb-4">
+                            <button onclick="loadOrdersData()" class="btn-dark px-3 py-2 rounded-xl text-xs font-black text-slate-300"><i class="fa-solid fa-rotate mr-1"></i>Actualizar</button>
+                            <button onclick="deleteAllOrders()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 px-3 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-trash mr-1"></i>Borrar pedidos</button>
+                        </div>
                         <div id="admin-orders" class="space-y-3 max-h-[400px] overflow-y-auto"></div>
                     </div>
                     <div class="glass p-6 rounded-2xl">
@@ -1062,6 +1067,12 @@
                 const fromKey = todayDateKey(fromDate);
                 const { data, error } = await sb.from("analytics_daily").select("*").gte("event_date", fromKey).order("event_date", { ascending: false });
                 if (error) throw error;
+                if (!data || data.length === 0) {
+                    renderAnalyticsStats();
+                    setAnalyticsDBStatus("DB: sin datos todavía, mostrando local", false);
+                    document.getElementById("ana-daily-list").innerHTML = "Sin datos guardados en base todavía. Se muestran eventos locales de este navegador.";
+                    return;
+                }
                 analyticsTableAvailable = true;
                 setAnalyticsDBStatus("DB: analytics_daily activa", true);
                 const todayRows = (data || []).filter(r => r.event_date === todayDateKey());
@@ -1081,8 +1092,17 @@
                 }).join("") || "Sin datos todavía";
             } catch (e) {
                 analyticsTableAvailable = false;
-                setAnalyticsDBStatus("DB: falta analytics_daily", false);
+                renderAnalyticsStats();
+                setAnalyticsDBStatus("DB: sin lectura, mostrando local", false);
+                const dailyList = document.getElementById("ana-daily-list");
+                if (dailyList) dailyList.innerHTML = "No se pudo leer analytics_daily. Revisá permisos/RLS o ejecutá el SQL de setup. Mientras tanto se muestran eventos locales.";
             }
+        }
+
+        function refreshAdminStats() {
+            renderAnalyticsStats();
+            loadDailyAnalyticsStats();
+            loadOrdersData();
         }
 
         function resetLocalAnalytics() {
@@ -1347,6 +1367,38 @@
 
         function closeAddedModal() { document.getElementById("modal-added-confirm").classList.add("hidden"); }
 
+        function parseOrderItems(order) {
+            try {
+                return typeof order.items === "string" ? JSON.parse(order.items) : (order.items || {});
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function getOrderPhone(order) {
+            const parsed = parseOrderItems(order);
+            return String(parsed.customer?.phone || "").replace(/\D/g, "");
+        }
+
+        function orderItemsSummary(order) {
+            const parsed = parseOrderItems(order);
+            const items = Array.isArray(parsed.cart) ? parsed.cart : [];
+            if (!items.length) return "Sin detalle de productos";
+            return items.map(item => `${item.qty || 1}x ${item.name || "Producto"}`).join(" · ");
+        }
+
+        function orderWhatsappMessage(order) {
+            const parsed = parseOrderItems(order);
+            const phone = getOrderPhone(order);
+            const items = Array.isArray(parsed.cart) ? parsed.cart : [];
+            let msg = `Hola ${order.customer_name || ""}, te escribimos de Cocina Gourmet por tu pedido.\n\n`;
+            msg += `Pedido: ${items.length ? items.map(i => `${i.qty || 1}x ${i.name || "Producto"}`).join(", ") : "productos solicitados"}\n`;
+            msg += `Total: ${money(order.total)}\n`;
+            msg += `Zona/Dirección: ${order.zone_name || ""} - ${order.customer_address || ""}\n\n`;
+            msg += `¿Coordinamos entrega o retiro?`;
+            return { phone, msg };
+        }
+
         function renderAdmin() {
             document.getElementById("admin-orders").innerHTML = orders.length ? orders.map(o => `
                 <div class="bg-slate-800/40 p-4 rounded-xl border border-white/5 hover:border-emerald-500/20 transition-all">
@@ -1356,6 +1408,11 @@
                     </div>
                     <p class="text-xs font-black text-white mb-1">${safeText(o.customer_name)}</p>
                     <p class="text-[9px] text-slate-500 leading-tight">${safeText(o.customer_address)}<br><span class="text-emerald-400/80">${safeText(o.zone_name)}</span></p>
+                    <p class="text-[10px] text-slate-400 mt-2 leading-snug">${safeText(orderItemsSummary(o))}</p>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <button onclick="sendOrderWhatsapp('${safeJs(o.id)}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-3 py-2 rounded-xl text-xs font-black"><i class="fa-brands fa-whatsapp mr-1"></i>WhatsApp</button>
+                        <button onclick="deleteOrder('${safeJs(o.id)}')" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 px-3 py-2 rounded-xl text-xs font-black"><i class="fa-solid fa-trash mr-1"></i>Borrar</button>
+                    </div>
                 </div>
             `).join("") : `<p class="text-center py-10 text-slate-600">No hay pedidos registrados</p>`;
 
@@ -1469,6 +1526,48 @@
             closeProductModal();
             loadAllData();
         };
+
+        function normalizeWhatsappNumber(phone) {
+            let clean = String(phone || "").replace(/\D/g, "");
+            if (!clean) return "";
+            if (clean.startsWith("00")) clean = clean.slice(2);
+            if (clean.startsWith("0")) clean = clean.slice(1);
+            if (!clean.startsWith("54")) clean = `549${clean}`;
+            return clean;
+        }
+
+        function sendOrderWhatsapp(orderId) {
+            const order = orders.find(o => String(o.id) === String(orderId));
+            if (!order) return alert("No se encontró el pedido.");
+            const { phone, msg } = orderWhatsappMessage(order);
+            const target = normalizeWhatsappNumber(phone) || WHATSAPP_FIXED;
+            if (!phone) alert("Este pedido no tiene teléfono guardado. Se abrirá el WhatsApp fijo de Cocina Gourmet.");
+            window.open(`https://wa.me/${target}?text=${encodeURIComponent(msg)}`, "_blank");
+        }
+
+        async function deleteOrder(orderId) {
+            if (!sb) return alert("No hay conexión con Supabase.");
+            const order = orders.find(o => String(o.id) === String(orderId));
+            const name = order ? order.customer_name : "este pedido";
+            if (!confirm(`¿Borrar el pedido de ${name}? Esta acción no se puede deshacer.`)) return;
+            const { error } = await sb.from("orders").delete().eq("id", orderId);
+            if (error) return alert("No se pudo borrar el pedido. Revisá permisos de Supabase.");
+            orders = orders.filter(o => String(o.id) !== String(orderId));
+            renderAdmin();
+            updateStats();
+        }
+
+        async function deleteAllOrders() {
+            if (!sb) return alert("No hay conexión con Supabase.");
+            if (!orders.length) return alert("No hay pedidos para borrar.");
+            const typed = prompt(`Para borrar ${orders.length} pedidos, escribí BORRAR`);
+            if (typed !== "BORRAR") return;
+            const { error } = await sb.from("orders").delete().not("id", "is", null);
+            if (error) return alert("No se pudieron borrar los pedidos. Revisá permisos de Supabase.");
+            orders = [];
+            renderAdmin();
+            updateStats();
+        }
 
         async function deleteProduct(id) { if (confirm("¿Eliminar producto?")) { await sb.from("products").delete().eq("id", id); loadAllData(); } }
         async function addCategory() {
