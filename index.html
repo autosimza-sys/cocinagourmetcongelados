@@ -236,7 +236,10 @@
             </div>
             <button onclick="focusSearch()" class="p-2 text-slate-400 hover:text-white transition-all" title="Buscar productos"><i class="fa-solid fa-magnifying-glass text-xl"></i></button>
             <button onclick="showView('shop')" class="p-2 text-slate-400 hover:text-white transition-all" title="Tienda"><i class="fa-solid fa-house text-xl"></i></button>
-            <button onclick="checkAdminAccess()" class="p-2 text-slate-400 hover:text-white transition-all" title="Admin"><i class="fa-solid fa-user-gear text-xl"></i></button>
+            <button onclick="document.getElementById('catalogo').scrollIntoView({behavior:'smooth'}); trackEvent('product_click', 'nav_catalogo')" class="btn-dark px-3 py-2 rounded-xl text-sm font-black text-white flex items-center gap-2" title="Ver catálogo">
+                <i class="fa-solid fa-list text-emerald-400"></i>
+                <span class="hidden sm:inline">Catálogo</span>
+            </button>
             <button onclick="toggleCart()" class="relative btn-dark p-3 rounded-xl">
                 <i class="fa-solid fa-basket-shopping text-emerald-400 text-xl"></i>
                 <span id="cart-count" class="absolute -top-1 -right-1 bg-rose-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
@@ -797,6 +800,12 @@
             if (!loadCatalogCache()) renderCatalogLoading();
             loadCart();
             await connectDB(savedUrl, savedKey);
+            handleAdminDeepLink();
+        }
+
+        function handleAdminDeepLink() {
+            const isAdminLink = location.hash === "#admin" || new URLSearchParams(location.search).get("admin") === "1";
+            if (isAdminLink) checkAdminAccess();
         }
 
         async function connectDB(url, key) {
